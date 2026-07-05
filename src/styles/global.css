@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/* Design tokens from the Figma (node 1:2) */
+@theme {
+  --color-pink: #ff006f;
+  --font-display: "Geist", system-ui, sans-serif;
+  --font-script: "Kapakana", cursive;
+}
+
+html,
+body {
+  height: 100%;
+  background: #000;
+}
