@@ -12,3 +12,73 @@ body {
   height: 100%;
   background: #000;
 }
+
+/* Scene Rig signals, written by src/scripts/scene-rig.ts. These defaults
+   keep the no-JS (and reduced-motion) render identical to the static page. */
+:root {
+  --pointer-x: 0;
+  --pointer-y: 0;
+  --pointer-drift-x: 0;
+  --pointer-drift-y: 0;
+  --scroll-progress: 0;
+}
+
+.scene {
+  perspective: 1000px;
+}
+
+/* Centering lives here so reduced-motion users still get a centered glow. */
+.scene-glow {
+  transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Wordmark leans toward the cursor like a card held in the hand.
+     preserve-3d lets each text layer sit on its own depth plane. */
+  .scene-tilt {
+    transform: rotateX(calc(var(--pointer-y) * -6deg))
+      rotateY(calc(var(--pointer-x) * 6deg));
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  /* A depth plane inside .scene-tilt. --depth-scale must be (P - z) / P
+     (P = 1000px perspective) so every plane renders at its natural size
+     at rest — flat until the tilt reveals the space. */
+  .scene-plane {
+    transform: translateZ(var(--depth, 0px)) scale(var(--depth-scale, 1));
+  }
+
+  /* Fake depth plane: a 2D translate that mimics how a closer plane
+     shifts under the parent's rotation. Used for "london", which must
+     stay inside the flat isolated group or its plus-lighter blend with
+     SOBREMESA would be lost to the 3D rendering context. */
+  .scene-float {
+    transform: translate(
+      calc(var(--pointer-x) * var(--float, 0px)),
+      calc(var(--pointer-y) * var(--float, 0px))
+    );
+    will-change: transform;
+  }
+
+  /* The photo counter-drifts on the slow channel; the 1.06 scale hides
+     the edges the translation would otherwise expose. */
+  .scene-photo {
+    transform: scale(1.06)
+      translate3d(
+        calc(var(--pointer-drift-x) * -1.4%),
+        calc(var(--pointer-drift-y) * -1%),
+        0
+      );
+    will-change: transform;
+  }
+
+  /* The glow trails the pointer slightly — a carried candle. */
+  .scene-glow {
+    transform: translate(
+      calc(-50% + var(--pointer-drift-x) * 3%),
+      calc(-50% + var(--pointer-drift-y) * 3%)
+    );
+    will-change: transform;
+  }
+}
