@@ -6,12 +6,15 @@
  * declarative consumer of these signals:
  *
  *   --pointer-x / --pointer-y            fast channel, -1..1  (wordmark)
+ *   --pointer-snap-x / --pointer-snap-y  snap channel, -1..1  (mobile photo —
+ *                                        near-1:1 with the hand, window physics)
  *   --pointer-drift-x / --pointer-drift-y slow channel, -1..1 (photo, glow)
  *   --scroll-progress                    0..1 over one viewport height
  *
  * The fast/slow speed mismatch between layers is what sells the depth.
  */
 
+const SNAP_LERP = 0.4;
 const FAST_LERP = 0.12;
 const SLOW_LERP = 0.045;
 const EPSILON = 0.0005;
@@ -24,6 +27,7 @@ function start() {
   const root = document.documentElement.style;
 
   const target = { x: 0, y: 0 };
+  const snap = { x: 0, y: 0 };
   const fast = { x: 0, y: 0 };
   const slow = { x: 0, y: 0 };
 
@@ -43,6 +47,9 @@ function start() {
   window.addEventListener(
     "pointermove",
     (e) => {
+      // Touch drags are for scrolling, not aiming — and they would fight
+      // the gyro channel on phones. Only real pointers steer the tilt.
+      if (e.pointerType === "touch") return;
       hasInput = true;
       target.x = clamp((e.clientX / innerWidth) * 2 - 1);
       target.y = clamp((e.clientY / innerHeight) * 2 - 1);
@@ -67,8 +74,11 @@ function start() {
           return;
         }
         hasInput = true;
-        target.x = clamp((e.gamma - baseGamma) / 20);
-        target.y = clamp((e.beta - baseBeta) / 20);
+        // Negated so the scene reads as fixed in the world: tilting the
+        // phone right pans the view toward the right of the room (the
+        // photo slides left on screen — window physics, see global.css).
+        target.x = clamp((baseGamma - e.gamma) / 20);
+        target.y = clamp((baseBeta - e.beta) / 20);
         wake();
       },
       { passive: true },
@@ -124,6 +134,8 @@ function start() {
       target.y = Math.sin(t * 0.8 + 1) * SWAY_AMPLITUDE;
     }
 
+    snap.x += (target.x - snap.x) * SNAP_LERP;
+    snap.y += (target.y - snap.y) * SNAP_LERP;
     fast.x += (target.x - fast.x) * FAST_LERP;
     fast.y += (target.y - fast.y) * FAST_LERP;
     slow.x += (target.x - slow.x) * SLOW_LERP;
@@ -131,6 +143,8 @@ function start() {
 
     root.setProperty("--pointer-x", fast.x.toFixed(4));
     root.setProperty("--pointer-y", fast.y.toFixed(4));
+    root.setProperty("--pointer-snap-x", snap.x.toFixed(4));
+    root.setProperty("--pointer-snap-y", snap.y.toFixed(4));
     root.setProperty("--pointer-drift-x", slow.x.toFixed(4));
     root.setProperty("--pointer-drift-y", slow.y.toFixed(4));
 

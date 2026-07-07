@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
+import basicSsl from "@vitejs/plugin-basic-ssl";
 
 // https://astro.build/config
 export default defineConfig({
@@ -11,6 +12,9 @@ export default defineConfig({
     host: true,
   },
   vite: {
-    plugins: [tailwindcss()],
+    // HTTPS is opt-in (npm run dev:https) because phones only deliver
+    // deviceorientation events on secure origins; plain `dev` stays http
+    // so the Claude preview harness keeps working.
+    plugins: [tailwindcss(), ...(process.env.HTTPS ? [basicSsl()] : [])],
   },
 });

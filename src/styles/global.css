@@ -18,6 +18,8 @@ body {
 :root {
   --pointer-x: 0;
   --pointer-y: 0;
+  --pointer-snap-x: 0;
+  --pointer-snap-y: 0;
   --pointer-drift-x: 0;
   --pointer-drift-y: 0;
   --scroll-progress: 0;
@@ -36,8 +38,9 @@ body {
   /* Wordmark leans toward the cursor like a card held in the hand.
      preserve-3d lets each text layer sit on its own depth plane. */
   .scene-tilt {
-    transform: rotateX(calc(var(--pointer-y) * -6deg))
-      rotateY(calc(var(--pointer-x) * 6deg));
+    --tilt-max: 6deg;
+    transform: rotateX(calc(var(--pointer-y) * var(--tilt-max) * -1))
+      rotateY(calc(var(--pointer-x) * var(--tilt-max)));
     transform-style: preserve-3d;
     will-change: transform;
   }
@@ -80,5 +83,45 @@ body {
       calc(-50% + var(--pointer-drift-y) * 3%)
     );
     will-change: transform;
+  }
+}
+
+/* Touch devices: a different illusion. Tilting the phone pans the room
+   behind the wordmark, as if peeking through a window onto a fixed scene.
+   The photo rides the snap channel — near-1:1 with the hand, because
+   window physics feel wrong with easing lag. The text keeps its desktop
+   counter-tilt (the gyro signal is negated in scene-rig.ts), so it leans
+   against the device's rotation and reads as staying put in the world. */
+@media (prefers-reduced-motion: no-preference) and (pointer: coarse) {
+  /* Negative flips the rotation relative to desktop: on the device, this
+     is the direction that reads as the text holding its place against the
+     phone's tilt (confirmed on hardware — the sign math lies, trust the
+     hand). Magnitude 12deg: full 1:1 with the hand would be 20deg
+     (scene-rig divides by 20), but partial compensation feels better. */
+  .scene-tilt {
+    --tilt-max: -12deg;
+  }
+
+  /* At these angles the translateZ parallax makes the small lines shift
+     against the logo (they sit behind the rotation axis, the logo in
+     front). Flatten the planes so the text tilts as one solid sheet. */
+  .scene-plane {
+    transform: none;
+  }
+
+  /* The fake-depth shimmy on "london" mimics a *pointer* wandering over a
+     tilting card; under window physics it reads as the logo detaching. */
+  .scene-float {
+    transform: none;
+    will-change: auto;
+  }
+
+  .scene-photo {
+    transform: scale(1.18)
+      translate3d(
+        calc(var(--pointer-snap-x) * 5%),
+        calc(var(--pointer-snap-y) * 4%),
+        0
+      );
   }
 }
