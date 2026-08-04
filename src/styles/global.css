@@ -1,10 +1,32 @@
 @import "tailwindcss";
 
+/*
+  Vitor — the Visigothic face the 010 cover sets its number in. It is not on
+  Google Fonts, so it is self-hosted: drop vitor.woff2 (and/or vitor.woff) into
+  public/fonts/ and it takes over automatically. Until then `font-display: swap`
+  plus the serif fallback below means 010 simply renders in a serif rather than
+  breaking. Only the digits are ever set in it.
+*/
+@font-face {
+  font-family: "Vitor";
+  src:
+    url("/fonts/vitor.woff2") format("woff2"),
+    url("/fonts/vitor.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0030-0039; /* digits only */
+}
+
 /* Design tokens from the Figma (node 1:2) */
 @theme {
   --color-pink: #ff006f;
   --font-display: "Geist", system-ui, sans-serif;
   --font-script: "Kapakana", cursive;
+
+  /* One-off display faces, used only for the issue number on two covers. */
+  --font-vitor: "Vitor", "Palatino", Georgia, serif;
+  --font-blackletter: "UnifrakturCook", "Palatino", Georgia, serif;
 }
 
 html,

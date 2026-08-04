@@ -1,0 +1,137 @@
+---
+// Direction C — "La Sobremesa". Shared shell: the dark table world.
+// Fonts, meta, table ground (crushed blacks + umber), grain, candlelight.
+import "../../../styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = "Design Sobremesa — the lingering traces of a shared meal where time was forgotten. Desde 2026.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Kapakana&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="c-table">
+    <div class="c-ground" aria-hidden="true"></div>
+    <div class="c-grain" aria-hidden="true"></div>
+    <div class="c-candle" aria-hidden="true"></div>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  /* ---- Direction C world ------------------------------------------------ */
+  body.c-table {
+    background: #050302;
+    color: #d3c9bc;
+    font-family: "Geist", system-ui, sans-serif;
+    min-height: 100%;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* The table surface: warm crushed blacks, umber mids, faint wood grain. */
+  .c-ground {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      repeating-linear-gradient(
+        97deg,
+        rgba(83, 69, 48, 0.055) 0px,
+        rgba(83, 69, 48, 0.055) 2px,
+        transparent 2px,
+        transparent 11px
+      ),
+      repeating-linear-gradient(
+        94deg,
+        rgba(211, 201, 188, 0.012) 0px,
+        rgba(211, 201, 188, 0.012) 1px,
+        transparent 1px,
+        transparent 37px
+      ),
+      radial-gradient(
+        130% 90% at 50% 28%,
+        #14110b 0%,
+        #0c0906 42%,
+        #070403 72%,
+        #050302 100%
+      );
+  }
+
+  /* Fine noise so the black feels like cinema, not CSS. */
+  .c-grain {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* The retired white wash glow, brought back as the candle over the table. */
+  .c-candle {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    top: 340px;
+    width: min(78vw, 900px);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    background: radial-gradient(circle, #fff 0%, transparent 62%);
+    mix-blend-mode: hard-light;
+    opacity: 0.13;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .c-candle {
+      animation: c-flicker 7s ease-in-out infinite;
+    }
+    @keyframes c-flicker {
+      0%,
+      100% {
+        opacity: 0.12;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      37% {
+        opacity: 0.16;
+        transform: translate(-50%, -51%) scale(1.02);
+      }
+      62% {
+        opacity: 0.11;
+        transform: translate(-50.4%, -49.6%) scale(0.99);
+      }
+      81% {
+        opacity: 0.15;
+        transform: translate(-49.7%, -50%) scale(1.01);
+      }
+    }
+  }
+
+  ::selection {
+    background: #0051ff;
+    color: #d3c9bc;
+  }
+</style>

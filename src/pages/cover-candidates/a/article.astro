@@ -1,0 +1,443 @@
+---
+// Direction A — "La Colección": the dark reading room (issue 021).
+import Layout from "../../../layouts/Layout.astro";
+import CandidateBar from "../../../components/CandidateBar.astro";
+import Cover from "../../../components/candidates/a/Cover.astro";
+import article from "../../../data/article.json";
+
+const MONTHS_ES = [
+  "ENE",
+  "FEB",
+  "MAR",
+  "ABR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AGO",
+  "SEP",
+  "OCT",
+  "NOV",
+  "DIC",
+];
+const d = new Date(article.date);
+const dateDisplay = `${d.getDate()} ${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
+
+// Section marker: split "Rambling 1. In four levels" into a marker + display
+// title. If the prefix already carries the kind, use it alone; otherwise
+// combine ("RAMBLING · LEVEL 2").
+const sections = article.sections.map((s) => {
+  const idx = s.heading.indexOf(". ");
+  let marker = s.kind.toUpperCase();
+  let display = s.heading;
+  if (idx > -1) {
+    const prefix = s.heading.slice(0, idx);
+    display = s.heading.slice(idx + 2);
+    marker = prefix.toLowerCase().includes(s.kind.toLowerCase())
+      ? prefix.toUpperCase()
+      : `${s.kind.toUpperCase()} · ${prefix.toUpperCase()}`;
+  }
+  return { ...s, marker, display };
+});
+---
+
+<Layout
+  title={`${article.number} — ${article.title} · Sobremesa London`}
+  description={article.standfirst}
+>
+  <div class="page-art" style={`--sea:${article.colorHex}`}>
+    <header class="topbar">
+      <a class="home" href="/cover-candidates/a/">
+        SOBREMESA<span class="home-script">london</span>
+      </a>
+      <span class="topbar-right">Nº {article.number} · LA COLECCIÓN</span>
+    </header>
+
+    <article>
+      <div class="hero">
+        <Cover
+          number={article.number}
+          colorHex={article.colorHex}
+          cardinal="bottom"
+          seed={parseInt(article.number, 10)}
+          hero
+        />
+      </div>
+
+      <header class="art-head">
+        <p class="kicker">
+          <span class="numchip">Nº {article.number}</span>
+          <time datetime={article.date}>{dateDisplay}</time>
+        </p>
+        <h1>{article.title}</h1>
+        <p class="standfirst">{article.standfirst}</p>
+        {
+          article.callbacks.length > 0 && (
+            <p class="callbacks">
+              ↩ vuelve sobre{" "}
+              {article.callbacks.map((cb, i) => (
+                <>
+                  <a href="/cover-candidates/a/">{cb}</a>
+                  {i < article.callbacks.length - 1 && " · "}
+                </>
+              ))}
+            </p>
+          )
+        }
+      </header>
+
+      <div class="body">
+        {
+          sections.map((s, i) => (
+            <>
+              <section class="sec">
+                <h2>
+                  <span class="marker">{s.marker}</span>
+                  <span class="sec-title">{s.display}</span>
+                </h2>
+                <div class="prose" set:html={s.html} />
+              </section>
+              {i === 1 && (
+                <aside class="pull" aria-label="Cita destacada">
+                  <p>{article.pullQuote}</p>
+                </aside>
+              )}
+            </>
+          ))
+        }
+      </div>
+
+      <footer class="closer-stage">
+        <p class="closer-marker">EL CIERRE</p>
+        <p class="closer">{article.closer}</p>
+        <p class="closer-script" aria-hidden="true">sobremesa</p>
+        <p class="fin">Nº {article.number} · FIN · MÁS SOON</p>
+      </footer>
+    </article>
+
+    <nav class="backnav" aria-label="Volver">
+      <a href="/cover-candidates/a/">← volver a la colección</a>
+    </nav>
+  </div>
+
+  <CandidateBar current="a" page="article" />
+</Layout>
+
+<style>
+  .page-art {
+    /* sea is a hard pairing on black: keep the token as the anchor hue,
+       tint it lighter for anything that must be read. */
+    --sea-bright: #6b96ff;
+    --sea-head: #4d80ff;
+    --bone: #d9cfc2;
+    --bone-bright: #efe6d9;
+    --bone-dim: rgba(211, 201, 188, 0.45);
+    min-height: 100vh;
+    background:
+      radial-gradient(80% 30% at 50% 0%, rgba(83, 69, 48, 0.16), transparent 70%),
+      #050302;
+    color: var(--bone);
+    font-family: "Geist", system-ui, sans-serif;
+    padding-bottom: 110px;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 20px clamp(16px, 4vw, 48px);
+    border-bottom: 1px solid rgba(211, 201, 188, 0.09);
+  }
+  .home {
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    color: var(--bone-bright);
+    text-decoration: none;
+  }
+  .home-script {
+    font-family: "Kapakana", cursive;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: #ff006f;
+    margin-left: 0.15em;
+    font-size: 1.05em;
+  }
+  .home:hover .home-script {
+    text-shadow: 0 0 16px rgba(255, 0, 111, 0.55);
+  }
+  .topbar-right {
+    font-size: 0.62rem;
+    letter-spacing: 0.24em;
+    color: var(--bone-dim);
+  }
+
+  /* ---------- hero ---------- */
+  .hero {
+    max-width: 1080px;
+    margin: clamp(28px, 5vw, 56px) auto 0;
+    padding: 0 clamp(16px, 4vw, 48px);
+  }
+  .hero :global(.cover) {
+    box-shadow:
+      0 18px 60px rgba(0, 0, 0, 0.6),
+      0 0 80px -24px var(--sea);
+  }
+
+  /* ---------- article head ---------- */
+  .art-head {
+    max-width: 46rem;
+    margin: clamp(36px, 6vw, 64px) auto 0;
+    padding: 0 clamp(16px, 4vw, 24px);
+    text-align: center;
+  }
+  .kicker {
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: 1em;
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    margin-bottom: 1.4rem;
+  }
+  .numchip {
+    color: var(--sea-bright);
+    font-weight: 700;
+  }
+  h1 {
+    font-weight: 700;
+    font-size: clamp(2rem, 5.5vw, 3.4rem);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    color: var(--bone-bright);
+    margin: 0 0 1.4rem;
+  }
+  .standfirst {
+    font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+    line-height: 1.6;
+    color: rgba(211, 201, 188, 0.78);
+    margin: 0 auto 1.2rem;
+    max-width: 38em;
+  }
+  .callbacks {
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    margin: 0;
+  }
+  .callbacks a {
+    color: var(--sea-bright);
+    text-decoration: none;
+    font-weight: 700;
+  }
+  .callbacks a:hover {
+    text-decoration: underline;
+  }
+
+  /* ---------- body ---------- */
+  .body {
+    max-width: 42.5rem; /* ~68ch at 1.06rem */
+    margin: 0 auto;
+    padding: clamp(40px, 6vw, 72px) clamp(18px, 4vw, 24px) 0;
+  }
+  .sec {
+    margin-bottom: clamp(48px, 7vw, 80px);
+  }
+  .sec h2 {
+    margin: 0 0 1.5rem;
+  }
+  .marker {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--sea-bright);
+    margin-bottom: 0.55rem;
+  }
+  .marker::after {
+    content: "";
+    display: block;
+    width: 3.2rem;
+    height: 2px;
+    background: var(--sea);
+    margin-top: 0.55rem;
+  }
+  .sec-title {
+    display: block;
+    font-weight: 700;
+    font-size: clamp(1.35rem, 3vw, 1.7rem);
+    line-height: 1.2;
+    color: var(--sea-head);
+  }
+
+  /* prose — injected html, style via :global */
+  .prose {
+    font-size: 1.06rem;
+    line-height: 1.78;
+    color: var(--bone);
+  }
+  .prose :global(p) {
+    margin: 0 0 1.35em;
+  }
+  .prose :global(a) {
+    color: var(--sea-bright);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--sea) 55%, transparent);
+    text-underline-offset: 3px;
+  }
+  .prose :global(a:hover) {
+    color: #8fb0ff;
+    text-decoration-color: currentColor;
+  }
+  .prose :global(strong) {
+    color: var(--bone-bright);
+  }
+  .prose :global(ol) {
+    margin: 0 0 1.35em;
+    padding-left: 1.5em;
+  }
+  .prose :global(ol li) {
+    margin-bottom: 0.7em;
+  }
+  .prose :global(ol li::marker) {
+    color: var(--sea-bright);
+    font-weight: 700;
+  }
+  .prose :global(blockquote) {
+    margin: 1.8em 0;
+    padding: 0.2em 0 0.2em 1.4em;
+    border-left: 2px solid var(--sea);
+    color: var(--bone-bright);
+    font-size: 1.05em;
+  }
+  .prose :global(blockquote p) {
+    margin: 0;
+  }
+  /* media placeholders from the published issue */
+  .prose :global(figure[data-placeholder]) {
+    aspect-ratio: 1.81 / 1;
+    margin: 2.2em 0;
+    border: 1px dashed color-mix(in srgb, var(--sea) 45%, transparent);
+    border-radius: 6px;
+    background:
+      radial-gradient(
+        80% 110% at 50% 110%,
+        color-mix(in srgb, var(--sea) 7%, transparent),
+        transparent 60%
+      ),
+      #070404;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7em;
+  }
+  .prose :global(figure[data-placeholder]::before) {
+    content: "MEDIA";
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.32em;
+    color: var(--sea-bright);
+  }
+  .prose :global(figure[data-placeholder]::after) {
+    content: attr(data-placeholder);
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    color: var(--bone-dim);
+    text-align: center;
+    padding: 0 1em;
+  }
+
+  /* ---------- pull quote ---------- */
+  .pull {
+    margin: clamp(24px, 4vw, 40px) auto clamp(56px, 8vw, 88px);
+    max-width: 54rem;
+    padding: 0 clamp(18px, 4vw, 24px);
+    text-align: center;
+  }
+  .pull p {
+    font-weight: 700;
+    font-size: clamp(1.45rem, 3.4vw, 2.15rem);
+    line-height: 1.28;
+    color: var(--sea-bright);
+    margin: 0;
+    text-shadow: 0 0 40px color-mix(in srgb, var(--sea) 35%, transparent);
+  }
+  .pull p::before {
+    content: "“";
+    color: var(--sea);
+  }
+  .pull p::after {
+    content: "”";
+    color: var(--sea);
+  }
+
+  /* ---------- the closer ---------- */
+  .closer-stage {
+    margin-top: clamp(56px, 8vw, 96px);
+    padding: clamp(64px, 10vw, 120px) clamp(18px, 4vw, 24px);
+    text-align: center;
+    background:
+      radial-gradient(
+        60% 70% at 50% 55%,
+        color-mix(in srgb, var(--sea) 8%, transparent),
+        transparent 70%
+      ),
+      linear-gradient(180deg, transparent, #030201 40%);
+  }
+  .closer-marker {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.36em;
+    color: var(--sea-bright);
+    margin: 0 0 2rem;
+  }
+  .closer-marker::after {
+    content: "";
+    display: block;
+    width: 2.6rem;
+    height: 2px;
+    background: var(--sea);
+    margin: 0.8rem auto 0;
+  }
+  .closer {
+    font-weight: 700;
+    font-size: clamp(1.35rem, 3vw, 2rem);
+    line-height: 1.4;
+    color: var(--bone-bright);
+    max-width: 26em;
+    margin: 0 auto 2.6rem;
+  }
+  .closer-script {
+    font-family: "Kapakana", cursive;
+    font-size: clamp(2.2rem, 5vw, 3.2rem);
+    color: var(--sea-bright);
+    text-shadow: 0 0 34px color-mix(in srgb, var(--sea) 55%, transparent);
+    margin: 0 0 1.6rem;
+  }
+  .fin {
+    font-size: 0.62rem;
+    letter-spacing: 0.3em;
+    color: var(--bone-dim);
+    margin: 0;
+  }
+
+  /* ---------- back nav ---------- */
+  .backnav {
+    text-align: center;
+    margin-top: 40px;
+  }
+  .backnav a {
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+    text-decoration: none;
+  }
+  .backnav a:hover {
+    color: var(--sea-bright);
+  }
+</style>

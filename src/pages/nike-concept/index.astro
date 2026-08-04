@@ -1,0 +1,754 @@
+---
+// /nike-concept — "La Sobremesa Tour ©2026".
+// The Nike After Dark Tour index pattern, inverted to paper/ink: every issue
+// is a stop, the reader takes the vacated seat. All imagery is placeholder
+// blocks (empty-tables theme) sized for a one-line swap later.
+import NikeLayout from "../../components/nike/NikeLayout.astro";
+import data from "../../data/all-issues.json";
+
+const SUBSTACK = "https://designsobremesa.substack.com";
+
+const MONTHS = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
+const fmtDate = (iso: string) => {
+  const [, m, d] = iso.split("-");
+  return `${d} ${MONTHS[Number(m) - 1]}`;
+};
+
+// Varied indentation rhythm, like the reference's cities list.
+const INDENTS = [0, 7, 2, 11, 5, 13, 3, 9];
+
+const issues = data.issues.map((it, i) => ({
+  ...it,
+  dateShort: fmtDate(it.date),
+  ind: INDENTS[i % INDENTS.length],
+}));
+
+// The tour runs forward: 000–010 / band / 011–020 / band / 021–029.
+const legs = [issues.slice(0, 11), issues.slice(11, 21), issues.slice(21)];
+
+// Table map seats: 30 plates around a top-down table.
+const seats = issues.map((it, i) => {
+  const angle = (i / issues.length) * Math.PI * 2 - Math.PI / 2;
+  return {
+    ...it,
+    x: 50 + 43 * Math.cos(angle),
+    y: 50 + 39 * Math.sin(angle),
+  };
+});
+
+const heroMarquee = Array(8).fill("LA SOBREMESA TOUR ©2026").join(" — ") + " — ";
+const footMarqueeA = Array(6).fill("QUÉDATE DE SOBREMESA").join(" — ") + " — ";
+const footMarqueeB = Array(6).fill("una entrega cada miércoles — desde 2026").join(" · ") + " · ";
+---
+
+<NikeLayout title="La Sobremesa Tour ©2026 — Design Sobremesa, every issue">
+  <!-- 1 · Pill nav -->
+  <nav class="pillnav" id="pillnav" aria-label="Main">
+    <a class="lockup" href="/">
+      SOBREMESA&nbsp;<span class="script">london</span>&nbsp;<span class="copy-mark">©2026</span>
+    </a>
+    <a class="pill" href={`${SUBSTACK}/subscribe`} rel="noopener">
+      SUSCRÍBETE&nbsp;<span aria-hidden="true">≡</span>
+    </a>
+  </nav>
+
+  <!-- 2 · Hero -->
+  <header class="hero">
+    <div class="marquee hero-marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>{heroMarquee}</span>
+        <span>{heroMarquee}</span>
+      </div>
+    </div>
+    <div class="hero-media" id="heroMedia">
+      <div class="ph ph--hero">
+        <span class="ph-label"
+          >PLACEHOLDER — mesa de chiringuito recién abandonada · camera in the vacated chair ·
+          duotone paper/ink</span
+        >
+      </div>
+    </div>
+    <h1 class="hero-title">
+      SOBREMESA<br />TOUR&nbsp;<span class="copy-mark">©2026</span>
+    </h1>
+    <p class="hero-lede">
+      Every issue is a stop. The table is set, the chair is free —
+      <span class="script hero-lede-script">siéntate.</span>
+    </p>
+  </header>
+
+  <!-- 3 · The index -->
+  <main class="index" id="index" aria-label="All issues">
+    <p class="index-kicker">TODAS LAS PARADAS — 000→029</p>
+
+    {
+      legs.map((leg, legIdx) => (
+        <>
+          <div class="leg">
+            {leg.map((it) => (
+              <a
+                class="row"
+                href={it.url}
+                rel="noopener"
+                data-color={it.color}
+                style={`--c:${it.colorHex}; --ind:${it.ind}vw`}
+              >
+                <span class="row-title">{it.title}</span>
+                <sup class="row-meta">
+                  <span class="row-meta-core">Nº {it.number} · {it.dateShort}</span>
+                  <span class="row-badge">SERVIDO</span>
+                </sup>
+              </a>
+            ))}
+          </div>
+          {legIdx === 0 && (
+            <figure class="band">
+              <p class="sec-label">
+                <span class="sec-num">01</span>
+                <span class="script sec-name">la mesa</span>
+              </p>
+              <div class="ph ph--band">
+                <span class="ph-label"
+                  >PLACEHOLDER — la mesa larga después de comer · migas, servilletas, un vaso a
+                  medias · duotone paper/ink</span
+                >
+              </div>
+              <figcaption class="script band-caption">nadie se quiere levantar</figcaption>
+            </figure>
+          )}
+          {legIdx === 1 && (
+            <figure class="band">
+              <p class="sec-label">
+                <span class="sec-num">02</span>
+                <span class="script sec-name">las sillas</span>
+              </p>
+              <div class="ph ph--band">
+                <span class="ph-label"
+                  >PLACEHOLDER — sillas vacías retiradas de la mesa · monobloc y enea, sin gente ·
+                  duotone paper/ink</span
+                >
+              </div>
+              <figcaption class="script band-caption">las sillas guardan el sitio</figcaption>
+            </figure>
+          )}
+        </>
+      ))
+    }
+
+    <div class="row row--next" style="--ind:5vw" aria-label="Next issue">
+      <span class="row-title">EN LA MESA…</span>
+      <sup class="row-meta"><span class="row-meta-core">Nº 030 · CADA MIÉRCOLES</span></sup>
+    </div>
+  </main>
+
+  <!-- 4 · The table map -->
+  <section class="map" id="map" aria-label="The table map">
+    <p class="sec-label">
+      <span class="sec-num">03</span>
+      <span class="script sec-name">el mapa de la mesa</span>
+    </p>
+    <div class="map-stage">
+      <div class="map-table" aria-hidden="true"></div>
+      {
+        seats.map((s) => (
+          <a
+            class="seat"
+            href={s.url}
+            rel="noopener"
+            style={`left:${s.x.toFixed(2)}%; top:${s.y.toFixed(2)}%; --c:${s.colorHex}`}
+            data-num={s.number}
+            data-title={s.title}
+            aria-label={`Nº ${s.number} — ${s.title}`}
+          >
+            <span class="seat-ring" aria-hidden="true" />
+            <span class="seat-dot" aria-hidden="true" />
+            <span class="seat-num" aria-hidden="true">{s.number}</span>
+          </a>
+        ))
+      }
+    </div>
+    <p class="map-readout" id="mapReadout" aria-live="polite">
+      30 ENTREGAS SERVIDAS — RECORRE LA MESA
+    </p>
+  </section>
+
+  <!-- 5 · Footer marquee -->
+  <footer class="footer" id="footer">
+    <div class="marquee foot-marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>{footMarqueeA}</span>
+        <span>{footMarqueeA}</span>
+      </div>
+    </div>
+    <div class="marquee foot-marquee foot-marquee--faint" aria-hidden="true">
+      <div class="marquee-track marquee-track--reverse">
+        <span>{footMarqueeB}</span>
+        <span>{footMarqueeB}</span>
+      </div>
+    </div>
+    <p class="sr-only">Quédate de sobremesa — una entrega cada miércoles, desde 2026.</p>
+
+    <div class="foot-list" aria-label="All issues, compact">
+      {
+        issues.map((it) => (
+          <a href={it.url} rel="noopener">
+            <span class="foot-num">{it.number}</span> {it.title}
+          </a>
+        ))
+      }
+    </div>
+    <a class="foot-cta" href={SUBSTACK} rel="noopener">designsobremesa.substack.com</a>
+  </footer>
+</NikeLayout>
+
+<style>
+  /* ---- Shared devices ---------------------------------------------------- */
+  .script {
+    font-family: var(--script);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .copy-mark {
+    font-size: 0.45em;
+    font-weight: 700;
+    vertical-align: super;
+    letter-spacing: 0.06em;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .sec-label {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+  }
+  .sec-num {
+    font-size: 0.8rem;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 0.15em;
+  }
+  .sec-name {
+    font-size: 1.6rem;
+    color: var(--ink);
+  }
+
+  /* Placeholder blocks — sized exactly like the final images, swap later. */
+  .ph {
+    position: relative;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E"),
+      radial-gradient(120% 90% at 50% 30%, var(--paper-deep) 0%, #d8ccb2 100%);
+    border: 1px solid var(--rule);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  .ph-label {
+    max-width: 34ch;
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    line-height: 1.9;
+    color: var(--ink-faint);
+    padding: 1.5rem;
+  }
+
+  /* Marquees: duplicated track halves, translateX loop. */
+  .marquee {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .marquee-track {
+    display: inline-flex;
+    animation: marquee 60s linear infinite;
+  }
+  .marquee-track--reverse {
+    animation-direction: reverse;
+  }
+  .marquee-track > span {
+    flex: none;
+    padding-right: 0.5em;
+  }
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* ---- 1 · Pill nav ------------------------------------------------------ */
+  .pillnav {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    width: min(94vw, 1200px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    transition:
+      border-color 0.3s,
+      background-color 0.3s,
+      box-shadow 0.3s;
+  }
+  .pillnav.scrolled {
+    background: rgba(236, 229, 214, 0.72);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border-color: var(--rule);
+    box-shadow: 0 8px 30px rgba(53, 44, 31, 0.08);
+  }
+  .lockup {
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+  .lockup .script {
+    font-size: 1.25em;
+  }
+  .pill {
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    text-decoration: none;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    padding: 0.55rem 1.1rem;
+    background: var(--paper);
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+  .pill:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* ---- 2 · Hero ---------------------------------------------------------- */
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: grid;
+    align-content: end;
+    padding: 0 4vw 6vh;
+    overflow: hidden;
+  }
+  .hero-marquee {
+    position: absolute;
+    top: 16vh;
+    left: 0;
+    right: 0;
+    z-index: 0;
+    font-weight: 900;
+    font-size: clamp(2rem, 6vw, 5rem);
+    letter-spacing: -0.02em;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--ink-faint);
+    opacity: 0.35;
+  }
+  .hero-media {
+    position: absolute;
+    inset: 26vh 8vw auto;
+    z-index: 1;
+    height: 62vh;
+    will-change: transform;
+  }
+  .ph--hero {
+    width: 100%;
+    height: 100%;
+  }
+  .hero-title {
+    position: relative;
+    z-index: 2;
+    font-weight: 900;
+    font-size: clamp(3rem, 14vw, 13rem);
+    line-height: 0.86;
+    letter-spacing: -0.035em;
+    text-transform: uppercase;
+    margin-bottom: 0.05em;
+  }
+  .hero-lede {
+    position: relative;
+    z-index: 2;
+    max-width: 34ch;
+    font-size: 1rem;
+    color: var(--ink-soft);
+    margin-top: 1.25rem;
+  }
+  .hero-lede-script {
+    font-size: 1.5em;
+    color: var(--ink);
+  }
+
+  /* ---- 3 · The index ----------------------------------------------------- */
+  .index {
+    padding: 14vh 4vw 10vh;
+  }
+  .index-kicker {
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.22em;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--rule);
+    padding-top: 1rem;
+    margin-bottom: 8vh;
+  }
+  .leg {
+    display: block;
+  }
+  .row {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    margin-left: var(--ind, 0);
+    padding: 0.06em 0;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .row-title {
+    font-weight: 900;
+    font-size: clamp(1.9rem, 7.5vw, 7.5rem);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    transition: color 0.15s;
+  }
+  .row-meta {
+    font-weight: 700;
+    font-size: clamp(0.65rem, 1.4vw, 1.05rem);
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+    margin-left: 0.6em;
+    white-space: nowrap;
+    transition:
+      color 0.15s,
+      background-color 0.15s;
+  }
+  .row-meta-core {
+    padding: 0.2em 0.1em;
+  }
+  .row-badge {
+    display: inline-block;
+    margin-left: 0.9em;
+    padding: 0.25em 0.7em;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    font-size: 0.72em;
+    letter-spacing: 0.2em;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .row:hover .row-title,
+  .row:focus-visible .row-title {
+    color: var(--c);
+  }
+  .row:hover .row-meta,
+  .row:focus-visible .row-meta {
+    color: var(--ink-soft);
+  }
+  .row:hover .row-badge,
+  .row:focus-visible .row-badge {
+    opacity: 1;
+  }
+  /* Aqua on paper fails contrast as type — flip to the chip treatment:
+     ink type, aqua-on-ink metadata chip. */
+  .row[data-color="aqua"]:hover .row-title,
+  .row[data-color="aqua"]:focus-visible .row-title {
+    color: var(--ink);
+  }
+  .row[data-color="aqua"]:hover .row-meta-core,
+  .row[data-color="aqua"]:focus-visible .row-meta-core {
+    background: var(--ink);
+    color: var(--aqua);
+    border-radius: 999px;
+    padding: 0.2em 0.8em;
+  }
+  .row--next .row-title {
+    color: var(--ink-faint);
+  }
+  .row--next {
+    margin-top: 6vh;
+  }
+
+  /* Reveal: hidden only when JS confirms it can reveal (js-reveal on body). */
+  :global(body.js-reveal) .row {
+    opacity: 0;
+    transform: translateY(0.55em);
+    transition:
+      opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+      transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  :global(body.js-reveal) .row.in {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ---- Interstitial bands ------------------------------------------------ */
+  .band {
+    margin: 12vh 0;
+    display: grid;
+    gap: 1.25rem;
+  }
+  .ph--band {
+    width: 100%;
+    aspect-ratio: 21 / 9;
+  }
+  .band-caption {
+    font-size: clamp(1.4rem, 3vw, 2.2rem);
+    color: var(--ink-soft);
+    justify-self: end;
+  }
+
+  /* ---- 4 · The table map ------------------------------------------------- */
+  .map {
+    padding: 8vh 4vw 12vh;
+    display: grid;
+    gap: 3rem;
+    justify-items: center;
+  }
+  .map .sec-label {
+    justify-self: start;
+  }
+  .map-stage {
+    position: relative;
+    width: min(82vw, 760px);
+    aspect-ratio: 1;
+  }
+  .map-table {
+    position: absolute;
+    inset: 9%;
+    border-radius: 50%;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E"),
+      radial-gradient(closest-side, var(--paper-deep) 0%, #dcd1ba 78%, #d3c6ab 100%);
+    border: 1px solid var(--rule);
+  }
+  .seat {
+    position: absolute;
+    width: 2.6rem;
+    height: 2.6rem;
+    transform: translate(-50%, -50%);
+    display: grid;
+    place-items: center;
+    text-decoration: none;
+    border-radius: 50%;
+  }
+  .seat-ring {
+    position: absolute;
+    inset: 22%;
+    border: 1px solid var(--ink-soft);
+    border-radius: 50%;
+    transition:
+      border-color 0.15s,
+      transform 0.15s;
+  }
+  .seat-dot {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50%;
+    background: var(--ink);
+    transition: background-color 0.15s;
+  }
+  .seat-num {
+    position: absolute;
+    top: 100%;
+    font-weight: 700;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+  }
+  .seat:hover .seat-ring,
+  .seat:focus-visible .seat-ring {
+    border-color: var(--c);
+    transform: scale(1.35);
+  }
+  .seat:hover .seat-dot,
+  .seat:focus-visible .seat-dot {
+    background: var(--c);
+  }
+  .seat[style*="#89FFE4"]:hover .seat-dot,
+  .seat[style*="#89FFE4"]:focus-visible .seat-dot {
+    background: var(--ink);
+  }
+  .map-readout {
+    min-height: 2.6em;
+    max-width: 40ch;
+    text-align: center;
+    font-weight: 700;
+    font-size: clamp(0.85rem, 2vw, 1.2rem);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* ---- 5 · Footer -------------------------------------------------------- */
+  .footer {
+    border-top: 1px solid var(--rule);
+    padding-bottom: 10vh;
+  }
+  .foot-marquee {
+    font-weight: 900;
+    font-size: clamp(3rem, 11vw, 10rem);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    padding-top: 6vh;
+  }
+  .foot-marquee--faint {
+    font-family: var(--script);
+    font-weight: 400;
+    font-size: clamp(1.4rem, 3.6vw, 3rem);
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--ink-faint);
+    padding-top: 0.5rem;
+  }
+  .foot-list {
+    columns: 3;
+    column-gap: 3rem;
+    padding: 10vh 4vw 0;
+  }
+  .foot-list a {
+    display: block;
+    width: fit-content;
+    font-size: 0.85rem;
+    line-height: 2;
+    text-decoration: none;
+    color: var(--ink-soft);
+  }
+  .foot-list a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+  .foot-num {
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    margin-right: 0.4em;
+  }
+  .foot-cta {
+    display: block;
+    width: fit-content;
+    margin: 8vh 4vw 0;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 0.2em;
+    text-decoration: none;
+  }
+  .foot-cta:hover {
+    color: var(--sea);
+    border-color: var(--sea);
+  }
+
+  /* ---- Responsive -------------------------------------------------------- */
+  @media (max-width: 720px) {
+    .row {
+      margin-left: calc(var(--ind, 0) * 0.35);
+    }
+    .hero-media {
+      inset: 22vh 4vw auto;
+      height: 48vh;
+    }
+    .foot-list {
+      columns: 1;
+    }
+    .seat-num {
+      display: none;
+    }
+  }
+  @media (min-width: 721px) and (max-width: 1100px) {
+    .foot-list {
+      columns: 2;
+    }
+  }
+</style>
+
+<script>
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Nav blur + hero parallax, one rAF-throttled scroll listener.
+  const nav = document.getElementById("pillnav");
+  const heroMedia = document.getElementById("heroMedia");
+  let ticking = false;
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      nav?.classList.toggle("scrolled", window.scrollY > 40);
+      if (!reduced && heroMedia) {
+        heroMedia.style.transform = `translateY(${window.scrollY * -0.15}px)`;
+      }
+      ticking = false;
+    });
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  // Index reveal: stagger within each intersecting batch. Skipped when the
+  // page loads in a hidden tab — frames don't run there, so rows would sit
+  // mid-transition at opacity 0 until the tab is fronted.
+  if (!reduced && !document.hidden && "IntersectionObserver" in window) {
+    document.body.classList.add("js-reveal");
+    const io = new IntersectionObserver(
+      (entries) => {
+        const incoming = entries
+          .filter((e) => e.isIntersecting)
+          .map((e) => e.target as HTMLElement)
+          .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+        incoming.forEach((el, i) => {
+          el.style.transitionDelay = `${i * 70}ms`;
+          el.addEventListener("transitionend", () => (el.style.transitionDelay = ""), {
+            once: true,
+          });
+          el.classList.add("in");
+          io.unobserve(el);
+        });
+      },
+      { rootMargin: "0px 0px -8% 0px" }
+    );
+    document.querySelectorAll(".row").forEach((r) => io.observe(r));
+  }
+
+  // Table map: hovering a seat names its issue in the readout.
+  const readout = document.getElementById("mapReadout");
+  if (readout) {
+    const base = readout.textContent;
+    document.querySelectorAll<HTMLElement>(".seat").forEach((seat) => {
+      const show = () => {
+        readout.textContent = `Nº ${seat.dataset.num} — ${seat.dataset.title}`;
+      };
+      const hide = () => {
+        readout.textContent = base;
+      };
+      seat.addEventListener("mouseenter", show);
+      seat.addEventListener("focus", show);
+      seat.addEventListener("mouseleave", hide);
+      seat.addEventListener("blur", hide);
+    });
+  }
+</script>

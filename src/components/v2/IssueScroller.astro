@@ -1,0 +1,379 @@
+---
+import { getImage } from "astro:assets";
+import { getCollection } from "astro:content";
+import { bindingFor } from "../../data/bindings";
+
+/**
+ * Issue reel — Figma nodes 52:194 / 53:269 / 53:324.
+ *
+ * The three canvases were drawn against 027–029; this renders the whole
+ * archive, newest first, off the `issues` collection scraped from Substack.
+ * De-selected rows are always white / soft-light; the selected treatment
+ * (accent + blend + display face) comes from src/data/bindings.ts, which is
+ * read off the Figma cover board.
+ */
+
+/**
+ * The covers, keyed by issue number from the filename. Globbed rather than
+ * imported one by one — there are 27 of them and the set grows every Thursday.
+ */
+const COVERS = Object.fromEntries(
+  Object.entries(
+    import.meta.glob<{ default: ImageMetadata }>("../../assets/covers/*.{png,jpg,jpeg}", {
+      eager: true,
+    }),
+  ).map(([path, mod]) => [path.match(/(\d{3})\.\w+$/)![1], mod.default]),
+);
+
+/**
+ * 002 and 003 never got their own photograph — the newsletter reused 001's.
+ * 000 has no cover at all, so it falls through to flat black.
+ */
+const COVER_ALIASES: Record<string, string> = { "002": "001", "003": "001" };
+
+const ALTS: Record<string, string> = {
+  "027": "Mesa de madera con restos de comida callejera entre food trucks al atardecer",
+  "028": "Vestuario de fútbol tras la celebración, con cajas de pizza y confeti",
+  "029": "Mesa de comedor recién terminada en una extensión acristalada londinense",
+};
+
+const entries = (await getCollection("issues")).sort((a, b) =>
+  b.data.number.localeCompare(a.data.number),
+);
+
+const issues = await Promise.all(
+  entries.map(async ({ data }) => {
+    const cover = COVERS[COVER_ALIASES[data.number] ?? data.number];
+    const optimised = cover
+      ? await getImage({
+          src: cover,
+          widths: [1280, 1920, 2560],
+          sizes: "100vw",
+          quality: 78,
+          format: "webp",
+        })
+      : null;
+
+    const binding = bindingFor(data.number);
+
+    return {
+      number: data.number,
+      title: data.title,
+      src: optimised?.src ?? null,
+      srcset: optimised?.srcSet.attribute || null,
+      alt: ALTS[data.number] ?? `Portada del número ${data.number} — ${data.title}`,
+      accent: binding.accent,
+      opacity: binding.opacity ?? 1,
+      face: binding.face ?? null,
+      // The blends assume a photograph underneath. Over the flat black of a
+      // coverless issue, hard-light drops the green channel and renders the
+      // orange as pure red — so paint the accent straight.
+      blend: optimised ? binding.blend : "normal",
+    };
+  }),
+);
+---
+
+<div class="reel" data-reel>
+  <!--
+    Everything that paints lives inside this stage: it is the stacking context
+    the titles blend against. Nothing between the covers and the rows may
+    create its own (no transform, opacity or filter on `.rows` / `.row`) or
+    mix-blend-mode would blend against transparency instead of the photo.
+  -->
+  <div class="stage">
+    {
+      /*
+        Thirty full-bleed covers cannot all be in the document at once: they sit
+        inside a fixed, on-screen container, so `loading="lazy"` would not hold
+        a single one back. The URLs ride in data-* and the scroll handler
+        promotes them to real attributes for the issues either side of the
+        current one — see mountNear().
+      */
+      issues.map((issue, i) => (
+        <div class="bg" data-bg data-nocover={issue.src ? undefined : ""}>
+          {issue.src && (
+            <img
+              src={i === 0 ? issue.src : undefined}
+              srcset={i === 0 ? issue.srcset : undefined}
+              data-src={issue.src}
+              data-srcset={issue.srcset}
+              sizes="100vw"
+              alt={issue.alt}
+              decoding="async"
+              fetchpriority={i === 0 ? "high" : "auto"}
+            />
+          )}
+        </div>
+      ))
+    }
+
+    <ol class="rows">
+      {
+        issues.map((issue, i) => (
+          <li
+            class="row"
+            data-row
+            data-number={issue.number}
+            data-face={issue.face}
+            style={`--accent:${issue.accent};--blend:${issue.blend};--live-max:${issue.opacity}`}
+          >
+            {/* De-selected layer: white, soft light. Fades out as the row snaps in. */}
+            <span class="ink idle" aria-hidden="true">
+              <span class="num">{issue.number}</span>
+              <span class="ttl">{issue.title}</span>
+            </span>
+            {/* Selected layer: issue accent + its blend mode, faded in on top. */}
+            <span class="ink live">
+              <span class="num">{issue.number}</span>
+              <span class="ttl">{issue.title}</span>
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+
+  {/*
+    Scroll driver: one viewport-tall snap target per issue. These are the only
+    snap targets on the page, and they are static, so 029 always lands at 0.
+  */}
+  {issues.map((issue) => <section class="snap" aria-hidden="true" data-snap={issue.number} />)}
+</div>
+
+<style>
+  .reel {
+    /*
+      One unit = 1/100th of the 1920×1080 canvas height. Bounded by width as
+      well (0.5625vw = 1svh at 16:9) so a window narrower than 16:9 scales the
+      whole composition down instead of shoving the titles off the right edge.
+    */
+    --u: min(1svh, 0.5625vw);
+
+    --row-h: calc(10.6296 * var(--u)); /* 114.8px */
+    --pad-l: calc(6.6667 * var(--u)); /* 72px   */
+    --gap: calc(0.463 * var(--u)); /*  5px   */
+    --num-w: calc(10.37 * var(--u)); /* 112px  */
+
+    /* Snapped row sits flush with the bottom edge (Figma: top 963 of 1080). */
+    --anchor: calc(100svh - var(--row-h) - 0.204 * var(--u));
+
+    --p: 0; /* scroll position, in issues */
+  }
+
+  /*
+    Fixed, not sticky, and deliberately NOT a snap target. A sticky element's
+    snap area travels with the scroll once it is stuck, so it offers a valid
+    snap position wherever you happen to stop — which stranded the scroll
+    half-way between 029 and 028 and dragged scrollTo(0) back down to 028.
+    Out of flow, the spacers below are the only snap targets: 0, 1×vh, 2×vh.
+  */
+  .stage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100svh;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+  }
+
+  /*
+    Covers stack: each one fades in *over* the last, which stays opaque
+    underneath. So an issue without a cover (000 shipped without one) has to
+    paint black itself, or the issue above it stays visible through the gap.
+  */
+  .bg[data-nocover] {
+    background: #000;
+  }
+
+  .bg :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .rows {
+    position: absolute;
+    top: calc(var(--anchor) - var(--p) * var(--row-h));
+    right: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .row {
+    position: relative;
+    height: var(--row-h);
+    overflow: hidden; /* Figma: overflow-clip per row */
+    cursor: pointer;
+  }
+
+  .ink {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap);
+    padding-left: var(--pad-l);
+    font-family: var(--font-display);
+    font-weight: 900; /* Geist UltraBlack */
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .num {
+    flex: none;
+    width: var(--num-w);
+    font-size: calc(4.0509 * var(--u)); /* 43.75px */
+    line-height: calc(3.5648 * var(--u)); /* 38.5px  */
+    letter-spacing: -0.045em; /* -1.969px */
+  }
+
+  /*
+    Two covers set their number in something other than Geist, and the reel
+    follows: Vitor's Visigothic digits on 010, UnifrakturCook's blackletter on
+    018. Both are display faces drawn on a wide body — Geist's -0.045em tracking
+    collapses them, so it is released here.
+  */
+  .row[data-face] .num {
+    letter-spacing: 0;
+  }
+
+  .row[data-face="vitor"] .num {
+    font-family: var(--font-vitor);
+    font-weight: 400;
+  }
+
+  .row[data-face="blackletter"] .num {
+    font-family: var(--font-blackletter);
+    font-weight: 700;
+  }
+
+  .ttl {
+    font-size: calc(12.963 * var(--u)); /* 140px  */
+    line-height: var(--row-h); /* 114.8px */
+    letter-spacing: -0.045em; /* -6.3px  */
+  }
+
+  .idle {
+    color: #fff;
+    mix-blend-mode: soft-light;
+    opacity: var(--idle, 1);
+  }
+
+  .live {
+    color: var(--accent);
+    mix-blend-mode: var(--blend);
+    /* --live-max carries the layer opacity the board sets (024 sits at 0.7). */
+    opacity: calc(var(--live, 0) * var(--live-max, 1));
+  }
+
+  .snap {
+    height: 100svh;
+    scroll-snap-align: start;
+  }
+</style>
+
+<script>
+  const reel = document.querySelector<HTMLElement>("[data-reel]");
+
+  if (reel) {
+    const bgs = [...reel.querySelectorAll<HTMLElement>("[data-bg]")];
+    const rows = [...reel.querySelectorAll<HTMLElement>("[data-row]")];
+    const last = rows.length - 1;
+
+    const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
+
+    /**
+     * Holds the outgoing cover until a third of the way through the travel,
+     * then swaps over quickly. A straight linear fade parks both photos at 50%
+     * across the middle of the scroll and reads as a muddy double exposure.
+     */
+    function ease(t: number) {
+      const x = clamp01((t - 0.32) / 0.42);
+      return x * x * (3 - 2 * x);
+    }
+
+    let queued = false;
+
+    function render() {
+      queued = false;
+
+      // Scroll progress expressed in issues: 0 = 029 snapped, 1 = 028, 2 = 027.
+      const p = Math.min(last, Math.max(0, window.scrollY / window.innerHeight));
+      reel!.style.setProperty("--p", String(p));
+
+      rows.forEach((row, i) => {
+        const distance = Math.abs(p - i);
+        const live = clamp01(1 - distance);
+        // Rows more than one step away dim to the 40% white of canvas 3, then
+        // keep fading out. The canvases only ever stacked three issues; across
+        // thirty, a floor of 45% turns the screen into a wall of type.
+        const falloff = (1 - 0.55 * clamp01(distance - 1)) * (1 - clamp01((distance - 2) / 4));
+
+        row.style.setProperty("--live", live.toFixed(4));
+        row.style.setProperty("--idle", ((1 - live) * falloff).toFixed(4));
+      });
+
+      // Each cover fades in *over* the previous one, which stays opaque
+      // underneath — a straight two-way crossfade washes out at the midpoint.
+      bgs.forEach((bg, i) => {
+        bg.style.opacity = i === 0 ? "1" : ease(clamp01(p - i + 1)).toFixed(4);
+      });
+
+      mountNear(p);
+    }
+
+    /**
+     * Give the browser the covers it is about to need — the current issue plus
+     * two either side — and nothing else. Attributes are set once; the image
+     * stays in the document afterwards so scrolling back is instant.
+     */
+    function mountNear(p: number) {
+      const centre = Math.round(p);
+      for (let i = Math.max(0, centre - 2); i <= Math.min(last, centre + 2); i++) {
+        const img = bgs[i].querySelector("img");
+        if (!img || img.src) continue;
+        if (img.dataset.srcset) img.srcset = img.dataset.srcset;
+        img.src = img.dataset.src!;
+      }
+    }
+
+    function onScroll() {
+      if (!queued) {
+        queued = true;
+        requestAnimationFrame(render);
+      }
+    }
+
+    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", render);
+
+    // Deep link: /#028 opens with that issue already snapped.
+    const target = rows.findIndex(
+      (row) => row.dataset.number === location.hash.slice(1),
+    );
+    if (target > 0) {
+      scrollTo({ top: target * window.innerHeight, behavior: "instant" });
+    }
+
+    // Clicking a title snaps to it.
+    rows.forEach((row, i) => {
+      row.addEventListener("click", () => {
+        scrollTo({ top: i * window.innerHeight, behavior: "smooth" });
+      });
+    });
+
+    render();
+  }
+</script>

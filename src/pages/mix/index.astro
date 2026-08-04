@@ -1,0 +1,79 @@
+---
+/**
+ * /mix — the home page hero with the cover photo replaced by a live
+ * two-liquid mixing simulation (see src/scripts/mix-sim.ts). The wordmark
+ * block, "desde 2026" and "más soon" are unchanged from `/`.
+ */
+import Layout from "../../layouts/Layout.astro";
+import MixPanel from "../../components/mix/MixPanel.astro";
+---
+
+<Layout
+  title="Sobremesa London — Mix"
+  description="Sobremesa London — dos líquidos mezclándose. Desde 2026. Más soon."
+>
+  <main class="relative grid min-h-svh w-full place-items-center overflow-hidden">
+    <!-- Full-bleed liquid simulation, edge to edge -->
+    <canvas
+      id="mix-canvas"
+      class="absolute inset-0 h-full w-full touch-none"
+      aria-label="Simulación de dos líquidos mezclándose"></canvas>
+
+    <p
+      id="mix-fallback"
+      class="absolute inset-x-0 bottom-6 z-20 hidden px-6 text-center text-xs text-white/70"
+    >
+    </p>
+
+    <!--
+      Same radial white glow as `/`: hard-light at 70% brightens whatever the
+      liquid does behind the wordmark so the pink stays readable. Its opacity
+      is exposed in the panel as "Wordmark halo".
+    -->
+    <div
+      id="mix-halo"
+      class="pointer-events-none absolute top-1/2 left-1/2 h-[75vmin] w-[90vmin] max-w-[1100px] -translate-x-1/2 -translate-y-1/2 opacity-70 mix-blend-hard-light"
+      style="background: radial-gradient(circle at 50% 50%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.92) 16%, rgba(255,255,255,0) 60%);"
+    >
+    </div>
+
+    <!--
+      Brand text on top as a solid, full-opacity layer with a normal blend.
+      `pointer-events-none` so dragging over the wordmark still stirs.
+    -->
+    <div
+      class="pointer-events-none relative z-10 flex flex-col items-center justify-center gap-5 p-3 text-center text-pink sm:gap-9"
+    >
+      <p class="text-sm font-bold tracking-[0.04em] uppercase whitespace-nowrap sm:text-2xl">
+        desde 2026
+      </p>
+
+      <div class="isolate flex flex-col items-center leading-none" aria-label="Sobremesa London">
+        <span class="text-[42px] font-bold tracking-[0.01em] mix-blend-plus-lighter sm:text-[68px]"
+          >SOBREMESA</span
+        >
+        <span
+          class="-mt-[0.28em] font-script text-[64px] leading-[0.8] mix-blend-plus-lighter sm:text-[112px]"
+          >london</span
+        >
+      </div>
+
+      <p class="text-sm font-bold tracking-[0.04em] uppercase whitespace-nowrap sm:text-2xl">
+        más soon
+      </p>
+    </div>
+
+    <MixPanel />
+  </main>
+</Layout>
+
+<style>
+  /* If WebGL2 is missing we still want a brand-coloured backdrop, not black. */
+  #mix-canvas.mix-canvas--dead {
+    background: linear-gradient(170deg, #7c4a26 0%, #b98a54 42%, #f0e2ce 100%);
+  }
+</style>
+
+<script>
+  import "../../scripts/mix-sim";
+</script>

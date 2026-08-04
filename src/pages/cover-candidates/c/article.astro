@@ -1,0 +1,487 @@
+---
+// Direction C — "La Sobremesa". Article page: the essay is the centrepiece
+// of the table; marginalia and clutter around a disciplined ~65ch column.
+import TableLayout from "../../../components/candidates/c/TableLayout.astro";
+import CandidateBar from "../../../components/CandidateBar.astro";
+import article from "../../../data/article.json";
+
+const fmt = (d: string) =>
+  new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "long", year: "numeric" })
+    .format(new Date(d))
+    .toUpperCase();
+
+// The pull quote comes from the "Level 3" section — stage it just before it.
+const PULL_BEFORE = 2;
+---
+
+<TableLayout
+  title={`${article.number} — ${article.title} · Design Sobremesa`}
+  description={article.standfirst}
+>
+  <main class="page" style={`--c:${article.colorHex};`}>
+    <!-- table clutter at the edges (desktop only, never over the text) -->
+    <div class="clutter" aria-hidden="true">
+      <div class="cl-coaster">021</div>
+      <div class="cl-ring cl-ring-1"></div>
+      <div class="cl-ring cl-ring-2"></div>
+      <p class="cl-scrap-1">MÁS <span>soon</span></p>
+      <p class="cl-scrap-2">DESDE 2026</p>
+    </div>
+
+    <article class="essay">
+      <header class="head">
+        <p class="head-brand">
+          <a href="/cover-candidates/c/">SOBREMESA <span class="head-script">london</span></a>
+        </p>
+        <p class="head-num" aria-hidden="true">{article.number}</p>
+        <h1 class="head-title">{article.title}</h1>
+        <p class="head-date">
+          <time datetime={article.date}>{fmt(article.date)}</time>
+        </p>
+        <p class="standfirst">{article.standfirst}</p>
+        {
+          article.callbacks.length > 0 && (
+            <p class="head-cb">
+              <span class="head-cb-note">sigue el hilo —</span>
+              {article.callbacks.map((cb) => (
+                <span class="head-cb-num">{cb}</span>
+              ))}
+            </p>
+          )
+        }
+      </header>
+
+      {
+        article.sections.map((section, i) => (
+          <>
+            {i === PULL_BEFORE && (
+              <aside class="pullquote">
+                <p>{article.pullQuote}</p>
+              </aside>
+            )}
+            <section class="sec">
+              <span class="kind" aria-hidden="true">{section.kind.toLowerCase()}</span>
+              <h2 class="sec-heading">{section.heading}</h2>
+              <div class="prose" set:html={section.html} />
+            </section>
+          </>
+        ))
+      }
+
+      <footer class="closer-stage">
+        <p class="closer-pre">y ya levantándonos de la mesa —</p>
+        <p class="closer">{article.closer}</p>
+        <p class="closer-mark">
+          SOBREMESA <span class="closer-script">london</span>
+        </p>
+        <a class="closer-back" href="/cover-candidates/c/">← volver a la mesa</a>
+      </footer>
+    </article>
+  </main>
+
+  <CandidateBar current="c" page="article" />
+</TableLayout>
+
+<style>
+  .page {
+    position: relative;
+    z-index: 3;
+    padding: 3.5rem 1.25rem 9rem;
+  }
+
+  .essay {
+    max-width: 42rem; /* ~65ch at body size */
+    margin-inline: auto;
+  }
+
+  /* ---- header ----------------------------------------------------------- */
+  .head {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+  .head-brand a {
+    font: 700 0.72rem/1 "Geist", system-ui, sans-serif;
+    letter-spacing: 0.3em;
+    color: rgba(211, 201, 188, 0.55);
+    text-decoration: none;
+  }
+  .head-brand a:hover,
+  .head-brand a:focus-visible {
+    color: #d3c9bc;
+  }
+  .head-script {
+    font: 400 1.15rem/1 "Kapakana", cursive;
+    letter-spacing: normal;
+    color: #ff006f;
+    vertical-align: -0.15em;
+  }
+  .head-num {
+    position: relative;
+    display: inline-block;
+    margin-top: 1.4rem;
+    font: 700 clamp(6rem, 17vw, 10.5rem)/1 "Geist", system-ui, sans-serif;
+    letter-spacing: -0.03em;
+    color: color-mix(in srgb, var(--c) 62%, #fff);
+    text-shadow: 0 0 34px color-mix(in srgb, var(--c) 55%, transparent);
+  }
+  .head-num::after {
+    content: "";
+    position: absolute;
+    inset: -34%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, var(--c) 0%, transparent 70%);
+    mix-blend-mode: plus-lighter;
+    opacity: 0.24;
+    pointer-events: none;
+  }
+  .head-title {
+    margin-top: 0.6rem;
+    font: 700 clamp(1.9rem, 5vw, 2.9rem)/1.12 "Geist", system-ui, sans-serif;
+    letter-spacing: -0.015em;
+    color: #e9e1d4;
+  }
+  .head-date {
+    margin-top: 1rem;
+    font: 500 0.68rem/1 "Geist", system-ui, sans-serif;
+    letter-spacing: 0.28em;
+    color: rgba(211, 201, 188, 0.5);
+  }
+  .standfirst {
+    margin: 1.9rem auto 0;
+    max-width: 34rem;
+    font: 400 1.2rem/1.6 "Geist", system-ui, sans-serif;
+    color: rgba(211, 201, 188, 0.85);
+  }
+
+  /* callbacks: napkin notes pointing at other weeks */
+  .head-cb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-top: 2rem;
+    padding: 0.65rem 1.1rem;
+    border: 1px dashed rgba(211, 201, 188, 0.28);
+    border-radius: 3px 9px 4px 10px;
+    transform: rotate(-1.5deg);
+    background: rgba(211, 201, 188, 0.035);
+  }
+  .head-cb-note {
+    font: 400 1.15rem/1 "Kapakana", cursive;
+    color: rgba(211, 201, 188, 0.6);
+  }
+  .head-cb-num {
+    font: 700 0.95rem/1 "Geist", system-ui, sans-serif;
+    color: color-mix(in srgb, var(--c) 62%, #fff);
+  }
+
+  /* ---- sections + marginalia -------------------------------------------- */
+  .sec {
+    position: relative;
+    margin-top: 3.6rem;
+  }
+  .kind {
+    display: inline-block;
+    font: 400 1.5rem/1 "Kapakana", cursive;
+    color: color-mix(in srgb, var(--c) 40%, rgba(211, 201, 188, 0.75));
+    transform: rotate(-3deg);
+    margin-bottom: 0.4rem;
+  }
+  .sec-heading {
+    font: 700 1.45rem/1.25 "Geist", system-ui, sans-serif;
+    color: #e9e1d4;
+    margin-bottom: 1.3rem;
+  }
+
+  @media (min-width: 1150px) {
+    .kind {
+      position: absolute;
+      left: -11rem;
+      top: 0.35rem;
+      width: 9rem;
+      text-align: right;
+      font-size: 1.65rem;
+      transform: rotate(-4deg);
+      margin-bottom: 0;
+    }
+  }
+
+  /* ---- prose (disciplined) ---------------------------------------------- */
+  .prose :global(p) {
+    font: 400 1.0625rem/1.75 "Geist", system-ui, sans-serif;
+    color: #d3c9bc;
+    margin-bottom: 1.35em;
+  }
+  .prose :global(a) {
+    color: color-mix(in srgb, var(--c) 52%, #d3c9bc);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--c) 55%, transparent);
+    text-underline-offset: 3px;
+  }
+  .prose :global(a:hover),
+  .prose :global(a:focus-visible) {
+    color: #fff;
+    text-decoration-color: var(--c);
+  }
+  .prose :global(strong) {
+    color: #efe8db;
+    font-weight: 700;
+  }
+  .prose :global(ol) {
+    counter-reset: c-ol;
+    list-style: none;
+    margin: 0 0 1.35em;
+    padding: 0;
+  }
+  .prose :global(ol li) {
+    counter-increment: c-ol;
+    position: relative;
+    padding-left: 2.5rem;
+    margin-bottom: 0.9em;
+    font: 400 1.0625rem/1.7 "Geist", system-ui, sans-serif;
+    color: #d3c9bc;
+  }
+  .prose :global(ol li::before) {
+    content: counter(c-ol);
+    position: absolute;
+    left: 0;
+    top: 0.05em;
+    font: 700 1.35rem/1.2 "Geist", system-ui, sans-serif;
+    color: color-mix(in srgb, var(--c) 62%, #fff);
+  }
+
+  /* blockquote: a line jotted on a napkin, slightly askew */
+  .prose :global(blockquote) {
+    margin: 1.9em 0;
+    padding: 1.15rem 1.35rem;
+    border: 1px dashed rgba(211, 201, 188, 0.3);
+    border-radius: 4px 11px 5px 12px;
+    background: rgba(211, 201, 188, 0.04);
+    transform: rotate(-0.8deg);
+  }
+  .prose :global(blockquote p) {
+    margin-bottom: 0;
+    font-weight: 500;
+    color: #e6ddd0;
+  }
+
+  /* figures: objects left on the table */
+  .prose :global(figure[data-placeholder]) {
+    position: relative;
+    margin: 2.6rem auto;
+    width: min(100%, 460px);
+    aspect-ratio: 3 / 2;
+    background:
+      radial-gradient(circle at 60% 38%, color-mix(in srgb, var(--c) 22%, #241c10) 0%, #0b0906 76%);
+    border: 11px solid #ded5c7;
+    border-bottom-width: 3.4rem;
+    transform: rotate(-1.6deg);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+  }
+  .prose :global(figure[data-placeholder]::after) {
+    content: attr(data-placeholder);
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2.9rem;
+    text-align: center;
+    font: 400 1.3rem/1 "Kapakana", cursive;
+    color: #2c2417;
+  }
+  .prose :global(figure[data-placeholder]:nth-of-type(even)) {
+    transform: rotate(1.4deg);
+  }
+
+  /* the video one: a phone left playing on the table */
+  .prose :global(figure[data-placeholder*="video"]) {
+    aspect-ratio: 16 / 9;
+    width: min(100%, 440px);
+    border: 9px solid #0a0805;
+    border-radius: 26px;
+    outline: 1px solid rgba(211, 201, 188, 0.22);
+    background:
+      radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--c) 30%, #10130a) 0%, #05070c 78%);
+    transform: rotate(1.8deg);
+  }
+  .prose :global(figure[data-placeholder*="video"]::before) {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
+    border-left: 22px solid rgba(211, 201, 188, 0.9);
+    border-top: 14px solid transparent;
+    border-bottom: 14px solid transparent;
+    filter: drop-shadow(0 0 14px color-mix(in srgb, var(--c) 70%, transparent));
+  }
+  .prose :global(figure[data-placeholder*="video"]::after) {
+    bottom: 0.6rem;
+    font: 500 0.62rem/1 "Geist", system-ui, sans-serif;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(211, 201, 188, 0.6);
+  }
+
+  /* ---- pull quote: a tilted card dropped between plates ------------------ */
+  .pullquote {
+    margin: 4.2rem auto 0.6rem;
+    max-width: 34rem;
+    padding: 2rem 2.2rem;
+    background: linear-gradient(165deg, #17140f 0%, #0e0b07 100%);
+    border: 1px solid rgba(211, 201, 188, 0.18);
+    border-radius: 6px 14px 8px 16px;
+    transform: rotate(-2deg);
+    position: relative;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55);
+  }
+  .pullquote::after {
+    content: "";
+    position: absolute;
+    inset: -22%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, var(--c) 0%, transparent 70%);
+    mix-blend-mode: plus-lighter;
+    opacity: 0.16;
+    pointer-events: none;
+  }
+  .pullquote p {
+    font: 700 clamp(1.25rem, 3vw, 1.6rem)/1.35 "Geist", system-ui, sans-serif;
+    color: color-mix(in srgb, var(--c) 46%, #e9e1d4);
+  }
+
+  /* ---- the closer: the last thing said before everyone gets up ----------- */
+  .closer-stage {
+    margin-top: 6rem;
+    text-align: center;
+    position: relative;
+    padding-top: 3.4rem;
+  }
+  .closer-stage::before {
+    content: "· · ·";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font: 700 1rem/1 "Geist", system-ui, sans-serif;
+    letter-spacing: 0.7em;
+    color: rgba(211, 201, 188, 0.4);
+  }
+  .closer-pre {
+    font: 400 1.5rem/1 "Kapakana", cursive;
+    color: rgba(211, 201, 188, 0.55);
+    transform: rotate(-2deg);
+  }
+  .closer {
+    margin: 1.7rem auto 0;
+    max-width: 30ch;
+    font: 700 clamp(1.45rem, 4vw, 2.05rem)/1.4 "Geist", system-ui, sans-serif;
+    color: #e9e1d4;
+    text-shadow: 0 0 44px color-mix(in srgb, var(--c) 34%, transparent);
+  }
+  .closer-mark {
+    margin-top: 3.2rem;
+    font: 700 0.78rem/1 "Geist", system-ui, sans-serif;
+    letter-spacing: 0.3em;
+    color: rgba(211, 201, 188, 0.55);
+  }
+  .closer-script {
+    font: 400 1.3rem/1 "Kapakana", cursive;
+    letter-spacing: normal;
+    color: #ff006f;
+    vertical-align: -0.18em;
+  }
+  .closer-back {
+    display: inline-block;
+    margin-top: 1.6rem;
+    font: 700 0.72rem/1 "Geist", system-ui, sans-serif;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #89ffe4;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(137, 255, 228, 0.4);
+    padding-bottom: 0.3rem;
+  }
+  .closer-back:hover,
+  .closer-back:focus-visible {
+    color: #fff;
+    border-color: #89ffe4;
+  }
+
+  /* ---- edge clutter (never over the column) ------------------------------ */
+  .clutter {
+    display: none;
+  }
+  @media (min-width: 1150px) {
+    .clutter {
+      display: block;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .cl-coaster {
+      position: absolute;
+      top: 130px;
+      left: 4%;
+      width: 150px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 32%, #241d12 0%, #171208 70%);
+      border: 1px solid rgba(211, 201, 188, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font: 700 1.9rem/1 "Geist", system-ui, sans-serif;
+      color: color-mix(in srgb, var(--c) 60%, #fff);
+      transform: rotate(-9deg);
+      opacity: 0.85;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+    }
+    .cl-ring {
+      border-radius: 50%;
+      border: 3px solid rgba(211, 201, 188, 0.05);
+      position: absolute;
+      filter: blur(0.6px);
+    }
+    .cl-ring-1 { width: 96px; height: 96px; right: 6%; top: 34%; }
+    .cl-ring-2 { width: 70px; height: 70px; left: 7%; top: 62%; border-color: rgba(255, 128, 0, 0.05); }
+    .cl-scrap-1 {
+      position: absolute;
+      right: 5%;
+      top: 150px;
+      font: 700 0.72rem/1 "Geist", system-ui, sans-serif;
+      letter-spacing: 0.22em;
+      color: rgba(211, 201, 188, 0.4);
+      transform: rotate(7deg);
+    }
+    .cl-scrap-1 span {
+      font: 400 1.15rem/1 "Kapakana", cursive;
+      letter-spacing: normal;
+      color: rgba(137, 255, 228, 0.6);
+    }
+    .cl-scrap-2 {
+      position: absolute;
+      right: 7%;
+      bottom: 10%;
+      font: 700 0.62rem/1 "Geist", system-ui, sans-serif;
+      letter-spacing: 0.3em;
+      color: rgba(211, 201, 188, 0.32);
+      transform: rotate(-6deg);
+    }
+  }
+
+  /* mobile spacing */
+  @media (max-width: 767px) {
+    .page {
+      padding-top: 2.5rem;
+    }
+    .head {
+      margin-bottom: 3rem;
+    }
+    .standfirst {
+      font-size: 1.1rem;
+    }
+  }
+</style>

@@ -1,0 +1,35 @@
+---
+import Layout from "../../layouts/Layout.astro";
+const variants = [
+  { key: "a", name: "La Colección", claim: "the record — the cover wall on crushed black" },
+  { key: "b", name: "El Semanario", claim: "the reading — quiet print, fluorescent sparks" },
+  { key: "c", name: "La Sobremesa", claim: "the intent — the table after the meal" },
+];
+---
+
+<Layout title="Cover candidates — Sobremesa London">
+  <main class="grid min-h-svh place-items-center bg-black px-6">
+    <div class="w-full max-w-md">
+      <p class="mb-8 text-xs font-bold uppercase tracking-[0.2em] text-white/40">
+        Cover candidates · tres direcciones
+      </p>
+      <ul class="flex flex-col gap-4">
+        {
+          variants.map((v) => (
+            <li>
+              <a
+                href={`/cover-candidates/${v.key}/`}
+                class="group block border border-white/15 p-5 transition-colors hover:border-pink"
+              >
+                <span class="text-2xl font-bold uppercase text-white group-hover:text-pink">
+                  {v.key.toUpperCase()} — {v.name}
+                </span>
+                <span class="mt-1 block text-sm text-white/50">{v.claim}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </main>
+</Layout>

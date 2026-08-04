@@ -1,0 +1,325 @@
+---
+// Direction A — "La Colección": the cinematic cover wall.
+import Layout from "../../../layouts/Layout.astro";
+import CandidateBar from "../../../components/CandidateBar.astro";
+import Cover from "../../../components/candidates/a/Cover.astro";
+import data from "../../../data/issues.json";
+
+const MONTHS_ES = [
+  "ENE",
+  "FEB",
+  "MAR",
+  "ABR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AGO",
+  "SEP",
+  "OCT",
+  "NOV",
+  "DIC",
+];
+
+const cardinals = ["bottom", "right", "top", "left"] as const;
+
+const issues = data.issues.map((it, i) => ({
+  ...it,
+  cardinal: cardinals[i % 4],
+  seed: parseInt(it.number, 10),
+}));
+
+// Group chronologically into month columns — the calendar wall.
+const monthsMap = new Map<number, typeof issues>();
+for (const it of issues) {
+  const m = new Date(it.date).getMonth();
+  if (!monthsMap.has(m)) monthsMap.set(m, []);
+  monthsMap.get(m)!.push(it);
+}
+const months = [...monthsMap.entries()].map(([m, list]) => ({
+  label: MONTHS_ES[m],
+  list,
+}));
+
+const fmtDate = (d: string) => {
+  const date = new Date(d);
+  return `${date.getDate()} ${MONTHS_ES[date.getMonth()]} ${date.getFullYear()}`;
+};
+---
+
+<Layout
+  title="Sobremesa London — La Colección"
+  description="Design Sobremesa — una sobremesa semanal sobre Design, AI y pop culture. La colección de números, desde 2026."
+>
+  <div class="page-a">
+    <header class="masthead">
+      <p class="overline">Una sobremesa semanal · Design, AI &amp; pop culture</p>
+      <h1 class="mark">
+        SOBREMESA<span class="mark-script">london</span>
+      </h1>
+      <p class="smallprint">
+        DESDE 2026 <span class="dot">·</span> LA COLECCIÓN
+        <span class="dot">·</span> MÁS SOON
+      </p>
+    </header>
+
+    <main>
+      <section class="wall" aria-label="La colección — números publicados">
+        {
+          months.map((month) => (
+            <section class="month">
+              <h2 class="month-label">{month.label}</h2>
+              <div class="stack">
+                {month.list.map((it) => (
+                  <a
+                    class="card"
+                    href="/cover-candidates/a/article"
+                    style={`--c:${it.colorHex}`}
+                  >
+                    <Cover
+                      number={it.number}
+                      colorHex={it.colorHex}
+                      cardinal={it.cardinal}
+                      seed={it.seed}
+                    />
+                    <div class="meta">
+                      <h3 class="title">{it.title}</h3>
+                      <p class="dateline">
+                        <time datetime={it.date}>{fmtDate(it.date)}</time>
+                        {it.callbacks.length > 0 && (
+                          <span class="cb" title="vuelve sobre">
+                            ↩ {it.callbacks.join(" · ")}
+                          </span>
+                        )}
+                      </p>
+                      <p class="teaser">{it.teaser}</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </section>
+          ))
+        }
+      </section>
+    </main>
+
+    <footer class="foot">
+      <p class="foot-line">
+        <span class="foot-script">sobremesa</span>
+        <span class="foot-domain">.london</span>
+      </p>
+      <p class="foot-small">
+        las huellas de una comida compartida donde el tiempo se olvidó
+      </p>
+      <p class="foot-small dim">
+        diez números en muestra · veintiocho publicados · DESDE 2026
+      </p>
+    </footer>
+  </div>
+
+  <CandidateBar current="a" page="front" />
+</Layout>
+
+<style>
+  .page-a {
+    min-height: 100vh;
+    background:
+      radial-gradient(90% 40% at 50% -5%, rgba(83, 69, 48, 0.22), transparent 70%),
+      #050302;
+    color: #d3c9bc;
+    font-family: "Geist", system-ui, sans-serif;
+    padding: 0 clamp(16px, 4vw, 56px) 96px;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    padding: clamp(40px, 7vw, 88px) 0 clamp(28px, 4vw, 56px);
+    text-align: center;
+  }
+  .overline {
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(211, 201, 188, 0.45);
+    margin-bottom: 1.4rem;
+  }
+  .mark {
+    font-family: "Geist", system-ui, sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.6rem, 8.5vw, 6.5rem);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    color: #e8ddcf;
+    margin: 0;
+  }
+  .mark-script {
+    font-family: "Kapakana", cursive;
+    font-weight: 400;
+    font-size: 0.52em;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #ff006f;
+    margin-left: 0.12em;
+    vertical-align: baseline;
+    text-shadow: 0 0 28px rgba(255, 0, 111, 0.45);
+  }
+  .smallprint {
+    margin-top: 1.5rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.24em;
+    color: rgba(211, 201, 188, 0.4);
+  }
+  .smallprint .dot {
+    color: rgba(255, 0, 111, 0.55);
+    margin: 0 0.35em;
+  }
+
+  /* ---------- the wall ---------- */
+  .wall {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: clamp(16px, 2vw, 28px);
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  .month-label {
+    font-family: "Geist", system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.3em;
+    color: rgba(211, 201, 188, 0.42);
+    border-bottom: 1px solid rgba(211, 201, 188, 0.14);
+    padding-bottom: 0.6rem;
+    margin-bottom: 1.1rem;
+  }
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(20px, 2.4vw, 32px);
+  }
+
+  /* ---------- cards ---------- */
+  .card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 6px;
+  }
+  .card :global(.cover) {
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
+  }
+  .card:hover :global(.cover),
+  .card:focus-visible :global(.cover) {
+    filter: brightness(1.2) saturate(1.06);
+    box-shadow:
+      0 8px 26px rgba(0, 0, 0, 0.5),
+      0 0 44px -8px var(--c);
+  }
+  .card:focus-visible {
+    outline: 2px solid var(--c);
+    outline-offset: 4px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .card :global(.cover) {
+      transition:
+        filter 0.35s ease,
+        box-shadow 0.35s ease,
+        transform 0.35s ease;
+    }
+    .card:hover :global(.cover),
+    .card:focus-visible :global(.cover) {
+      transform: translateY(-3px);
+    }
+  }
+
+  .meta {
+    padding: 0.75rem 0.1rem 0;
+  }
+  .title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.25;
+    color: #e8ddcf;
+    margin: 0 0 0.3rem;
+  }
+  .card:hover .title {
+    color: #fff;
+  }
+  .dateline {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7em;
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(211, 201, 188, 0.42);
+    margin: 0 0 0.45rem;
+  }
+  .cb {
+    color: color-mix(in srgb, var(--c) 72%, #d3c9bc);
+    letter-spacing: 0.1em;
+  }
+  .teaser {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: rgba(211, 201, 188, 0.58);
+    margin: 0;
+  }
+
+  /* ---------- footer ---------- */
+  .foot {
+    margin-top: clamp(72px, 10vw, 128px);
+    text-align: center;
+  }
+  .foot-line {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    margin: 0 0 0.8rem;
+  }
+  .foot-script {
+    font-family: "Kapakana", cursive;
+    color: #ff006f;
+    text-shadow: 0 0 24px rgba(255, 0, 111, 0.4);
+  }
+  .foot-domain {
+    font-family: "Geist", system-ui, sans-serif;
+    font-weight: 700;
+    color: rgba(211, 201, 188, 0.55);
+    font-size: 0.6em;
+  }
+  .foot-small {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    color: rgba(211, 201, 188, 0.5);
+    margin: 0.3rem 0;
+  }
+  .foot-small.dim {
+    text-transform: uppercase;
+    font-size: 0.62rem;
+    letter-spacing: 0.22em;
+    color: rgba(211, 201, 188, 0.32);
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 1099px) {
+    .wall {
+      grid-template-columns: 1fr;
+      gap: 40px;
+      max-width: 720px;
+    }
+    .stack {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+  }
+  @media (max-width: 639px) {
+    .stack {
+      grid-template-columns: 1fr;
+    }
+    .title {
+      font-size: 1.05rem;
+    }
+    .teaser {
+      font-size: 0.85rem;
+    }
+  }
+</style>

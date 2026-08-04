@@ -1,0 +1,569 @@
+---
+// Direction C — "La Sobremesa". Front page: the table after the meal.
+// The 10 teasers are objects left on the table — plates, napkins, receipts,
+// coasters, notes — scattered, overlapping, glowing where they touch.
+import TableLayout from "../../../components/candidates/c/TableLayout.astro";
+import CandidateBar from "../../../components/CandidateBar.astro";
+import data from "../../../data/issues.json";
+
+const issues = data.issues;
+
+const fmt = (d: string) =>
+  new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short", year: "numeric" })
+    .format(new Date(d))
+    .replaceAll(".", "")
+    .toUpperCase();
+
+// Where each object landed on the table (desktop scatter).
+// x/y = % of the scene, r = resting rotation, z = stacking, d = float delay.
+type Spot = { x: number; y: number; r: number; z: number; shape: string; d: number };
+const spots: Record<string, Spot> = {
+  "006": { x: 5,  y: 8,  r: 6,  z: 12, shape: "coaster", d: 0.0 },
+  "009": { x: 68, y: 6,  r: -5, z: 14, shape: "napkin",  d: 1.1 },
+  "012": { x: 8,  y: 30, r: -7, z: 16, shape: "note",    d: 1.6 },
+  "015": { x: 63, y: 26, r: 4,  z: 18, shape: "plate",   d: 2.0 },
+  "017": { x: 5,  y: 52, r: 5,  z: 20, shape: "photo",   d: 2.4 },
+  "020": { x: 27, y: 43, r: -8, z: 22, shape: "coaster", d: 0.8 },
+  "021": { x: 33, y: 18, r: -2, z: 30, shape: "plate",   d: 0.4 },
+  "025": { x: 66, y: 50, r: 7,  z: 17, shape: "napkin",  d: 1.3 },
+  "027": { x: 21, y: 61, r: 3,  z: 24, shape: "receipt", d: 0.2 },
+  "028": { x: 52, y: 67, r: -5, z: 21, shape: "note",    d: 1.9 },
+};
+---
+
+<TableLayout title="Sobremesa London — la mesa">
+  <main class="scene">
+    <header class="mark">
+      <p class="mark-since">DESDE 2026 · 28 ENTREGAS · CADA SEMANA</p>
+      <h1 class="mark-lockup">
+        <span class="mark-grot">SOBREMESA</span>
+        <span class="mark-script">london</span>
+      </h1>
+      <p class="mark-line">the lingering traces of a shared meal where time was forgotten</p>
+    </header>
+
+    <!-- traces on the wood: ring stains, crumbs, scraps -->
+    <div class="trace ring ring-1" aria-hidden="true"></div>
+    <div class="trace ring ring-2" aria-hidden="true"></div>
+    <div class="trace ring ring-3" aria-hidden="true"></div>
+    <div class="trace crumbs crumbs-1" aria-hidden="true"></div>
+    <div class="trace crumbs crumbs-2" aria-hidden="true"></div>
+    <p class="trace scrap scrap-1" aria-hidden="true">MÁS <span>soon</span></p>
+    <p class="trace scrap scrap-2" aria-hidden="true">design · AI · pop culture</p>
+
+    <ul class="objects">
+      {
+        issues.map((issue) => {
+          const s = spots[issue.number];
+          return (
+            <li
+              class="obj-spot"
+              style={`--x:${s.x}%; --y:${s.y}%; --z:${s.z}; --d:${s.d}s;`}
+            >
+              <a
+                href="/cover-candidates/c/article"
+                class={`obj obj--${s.shape}`}
+                style={`--r:${s.r}deg; --c:${issue.colorHex};`}
+              >
+                <span class="obj-num" aria-hidden="true">{issue.number}</span>
+                <h2 class="obj-title">
+                  <span class="sr-num">{issue.number} — </span>{issue.title}
+                </h2>
+                <p class="obj-teaser">{issue.teaser}</p>
+                <p class="obj-meta">
+                  <time datetime={issue.date}>{fmt(issue.date)}</time>
+                  <span class="obj-secs">{issue.sections.join(" · ")}</span>
+                </p>
+                {issue.callbacks.length > 0 && (
+                  <p class="obj-cb">↩ vuelve a {issue.callbacks.join(" · ")}</p>
+                )}
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+
+    <footer class="tail">
+      <p class="tail-line">la mesa sigue puesta —</p>
+      <a class="tail-link" href="/cover-candidates/c/article">pasa a leer la 021 →</a>
+    </footer>
+  </main>
+
+  <CandidateBar current="c" page="front" />
+</TableLayout>
+
+<style>
+  .scene {
+    position: relative;
+    z-index: 3;
+    max-width: 1400px;
+    margin-inline: auto;
+    padding: 3.5rem 1.25rem 9rem;
+  }
+
+  /* ---- the mark --------------------------------------------------------- */
+  .mark {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .mark-since {
+    font: 700 0.7rem/1 "Geist", system-ui, sans-serif;
+    letter-spacing: 0.32em;
+    color: rgba(211, 201, 188, 0.55);
+    margin-bottom: 1.1rem;
+  }
+  .mark-lockup {
+    position: relative;
+    display: inline-block;
+    line-height: 0.9;
+  }
+  .mark-grot {
+    font: 700 clamp(3rem, 8.5vw, 6.5rem)/0.95 "Geist", system-ui, sans-serif;
+    letter-spacing: -0.02em;
+    color: #d3c9bc;
+    text-shadow: 0 0 60px rgba(255, 128, 0, 0.14);
+  }
+  .mark-script {
+    position: absolute;
+    right: -0.4em;
+    bottom: -0.52em;
+    font: 400 clamp(1.7rem, 4.4vw, 3.3rem)/1 "Kapakana", cursive;
+    color: #ff006f;
+    transform: rotate(-6deg);
+    text-shadow: 0 0 26px rgba(255, 0, 111, 0.45);
+    pointer-events: none;
+  }
+  .mark-line {
+    margin-top: 1.9rem;
+    font: 400 0.85rem/1.5 "Geist", system-ui, sans-serif;
+    font-style: italic;
+    color: rgba(211, 201, 188, 0.45);
+  }
+
+  /* ---- objects on the table --------------------------------------------- */
+  .objects {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    min-height: max(160vh, 1650px);
+  }
+  .obj-spot {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    z-index: var(--z);
+  }
+  .obj-spot:hover,
+  .obj-spot:focus-within {
+    z-index: 60;
+  }
+
+  .obj {
+    position: relative;
+    display: block;
+    text-decoration: none;
+    transform: rotate(var(--r));
+    transition:
+      transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1),
+      box-shadow 0.28s ease;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+  }
+  .obj:hover,
+  .obj:focus-visible {
+    transform: rotate(var(--r)) translateY(-9px) scale(1.025);
+    box-shadow: 0 26px 54px rgba(0, 0, 0, 0.65);
+  }
+  .obj:focus-visible {
+    outline: 2px solid var(--c);
+    outline-offset: 5px;
+  }
+
+  /* the neon halo: adds where objects overlap */
+  .obj::after {
+    content: "";
+    position: absolute;
+    inset: -19%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, var(--c) 0%, transparent 72%);
+    mix-blend-mode: plus-lighter;
+    opacity: 0.17;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+  }
+  .obj:hover::after,
+  .obj:focus-visible::after {
+    opacity: 0.3;
+  }
+
+  .sr-num {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* shared type inside objects (dark grounds) */
+  .obj-num {
+    display: block;
+    font: 700 3rem/1 "Geist", system-ui, sans-serif;
+    letter-spacing: -0.01em;
+    color: color-mix(in srgb, var(--c) 82%, #fff);
+    text-shadow: 0 0 22px color-mix(in srgb, var(--c) 60%, transparent);
+  }
+  .obj-title {
+    margin-top: 0.55rem;
+    font: 700 1.1rem/1.2 "Geist", system-ui, sans-serif;
+    color: #e6ddd0;
+  }
+  .obj-teaser {
+    margin-top: 0.5rem;
+    font: 400 0.8rem/1.5 "Geist", system-ui, sans-serif;
+    color: rgba(211, 201, 188, 0.72);
+  }
+  .obj-meta {
+    margin-top: 0.65rem;
+    font: 500 0.6rem/1.6 "Geist", system-ui, sans-serif;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(211, 201, 188, 0.45);
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .obj-cb {
+    margin-top: 0.45rem;
+    font: 700 0.62rem/1.4 "Geist", system-ui, sans-serif;
+    letter-spacing: 0.1em;
+    color: color-mix(in srgb, var(--c) 75%, #d3c9bc);
+  }
+
+  /* -- plate: dark ceramic, bone rim -- */
+  .obj--plate {
+    width: 345px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 36% 30%, #1b1712 0%, #100d08 58%, #0b0906 100%);
+    border: 1px solid rgba(211, 201, 188, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding: 3.4rem;
+  }
+  .obj--plate::before {
+    content: "";
+    position: absolute;
+    inset: 24px;
+    border-radius: 50%;
+    border: 1px solid rgba(211, 201, 188, 0.12);
+    pointer-events: none;
+  }
+  .obj--plate .obj-num {
+    font-size: 3.6rem;
+  }
+
+  /* -- coaster: small cork round -- */
+  .obj--coaster {
+    width: 262px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 32%, #2a2213 0%, #1c1710 62%, #131007 100%);
+    border: 1px solid rgba(211, 201, 188, 0.16);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding: 2.3rem;
+  }
+  .obj--coaster .obj-num {
+    font-size: 2.5rem;
+  }
+  .obj--coaster .obj-title {
+    font-size: 0.95rem;
+  }
+  .obj--coaster .obj-teaser {
+    font-size: 0.72rem;
+  }
+
+  /* -- napkin: dark linen square -- */
+  .obj--napkin {
+    width: 300px;
+    padding: 1.6rem 1.5rem 1.4rem;
+    background:
+      repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.014) 0 2px, transparent 2px 5px),
+      linear-gradient(160deg, #1a1613 0%, #12100b 100%);
+    border: 1px solid rgba(211, 201, 188, 0.15);
+    border-radius: 5px 12px 7px 14px;
+  }
+  .obj--napkin::before {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border: 1px dashed rgba(211, 201, 188, 0.14);
+    border-radius: 4px 9px 5px 10px;
+    pointer-events: none;
+  }
+
+  /* -- note: bone paper, torn edge, ink text -- */
+  .obj--note {
+    width: 285px;
+    padding: 1.5rem 1.4rem 1.7rem;
+    background: linear-gradient(175deg, #ded5c7 0%, #cfc5b5 100%);
+    clip-path: polygon(0 2.5%, 5% 0, 55% 1%, 96% 0, 100% 5%, 99% 60%, 100% 96%, 93% 100%, 48% 98.5%, 7% 100%, 0 96%);
+  }
+  .obj--note .obj-title,
+  .obj--note .obj-teaser {
+    color: #241d13;
+  }
+  .obj--note .obj-teaser {
+    color: rgba(36, 29, 19, 0.78);
+  }
+  .obj--note .obj-meta {
+    color: rgba(36, 29, 19, 0.5);
+  }
+  .obj--note .obj-num,
+  .obj--note .obj-cb {
+    color: color-mix(in srgb, var(--c) 78%, #241d13);
+    text-shadow: none;
+  }
+
+  /* -- receipt: narrow paper strip, perforated -- */
+  .obj--receipt {
+    width: 235px;
+    padding: 1.6rem 1.2rem 1.4rem;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 26px, rgba(36, 29, 19, 0.05) 26px 27px),
+      #e9e2d4;
+  }
+  .obj--receipt::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -7px;
+    height: 8px;
+    background:
+      linear-gradient(-45deg, #e9e2d4 5px, transparent 0),
+      linear-gradient(45deg, #e9e2d4 5px, transparent 0);
+    background-size: 14px 8px;
+    background-repeat: repeat-x;
+    pointer-events: none;
+  }
+  .obj--receipt .obj-num {
+    font-size: 2.4rem;
+    color: color-mix(in srgb, var(--c) 80%, #241d13);
+    text-shadow: none;
+  }
+  .obj--receipt .obj-title {
+    font-size: 0.98rem;
+    color: #241d13;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .obj--receipt .obj-teaser {
+    font-size: 0.73rem;
+    color: rgba(36, 29, 19, 0.75);
+    border-top: 1px dashed rgba(36, 29, 19, 0.35);
+    padding-top: 0.5rem;
+  }
+  .obj--receipt .obj-meta {
+    color: rgba(36, 29, 19, 0.5);
+    border-top: 1px dashed rgba(36, 29, 19, 0.35);
+    padding-top: 0.45rem;
+  }
+  .obj--receipt .obj-cb {
+    color: color-mix(in srgb, var(--c) 72%, #241d13);
+  }
+
+  /* -- photo: polaroid, the numeral is the picture -- */
+  .obj--photo {
+    width: 280px;
+    padding: 11px 11px 0.95rem;
+    background: linear-gradient(175deg, #e4dccf 0%, #d6cdbd 100%);
+  }
+  .obj--photo .obj-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    margin-bottom: 0.7rem;
+    font-size: 4rem;
+    background:
+      radial-gradient(circle at 62% 36%, color-mix(in srgb, var(--c) 26%, #241c10) 0%, #0c0a06 74%);
+  }
+  .obj--photo .obj-title {
+    font-family: "Kapakana", cursive;
+    font-weight: 400;
+    font-size: 1.55rem;
+    color: #2c2417;
+  }
+  .obj--photo .obj-teaser {
+    color: rgba(36, 29, 19, 0.72);
+  }
+  .obj--photo .obj-meta {
+    color: rgba(36, 29, 19, 0.48);
+  }
+  .obj--photo .obj-cb {
+    color: color-mix(in srgb, var(--c) 78%, #241d13);
+  }
+
+  /* ---- traces ----------------------------------------------------------- */
+  .trace {
+    position: absolute;
+    pointer-events: none;
+  }
+  .ring {
+    border-radius: 50%;
+    border: 3px solid rgba(211, 201, 188, 0.05);
+    filter: blur(0.6px);
+  }
+  .ring-1 { width: 110px; height: 110px; left: 24%; top: 340px; }
+  .ring-2 { width: 74px; height: 74px; right: 14%; top: 46%; border-color: rgba(255, 128, 0, 0.05); }
+  .ring-3 { width: 92px; height: 92px; left: 10%; bottom: 16%; }
+  .crumbs {
+    width: 120px;
+    height: 60px;
+    background-image:
+      radial-gradient(circle 2px at 12% 30%, rgba(211, 201, 188, 0.16) 98%, transparent),
+      radial-gradient(circle 1.6px at 45% 70%, rgba(211, 201, 188, 0.12) 98%, transparent),
+      radial-gradient(circle 2.4px at 76% 24%, rgba(211, 201, 188, 0.14) 98%, transparent),
+      radial-gradient(circle 1.4px at 90% 80%, rgba(211, 201, 188, 0.1) 98%, transparent),
+      radial-gradient(circle 1.8px at 30% 85%, rgba(211, 201, 188, 0.12) 98%, transparent);
+  }
+  .crumbs-1 { left: 48%; top: 560px; }
+  .crumbs-2 { right: 8%; top: 72%; }
+  .scrap {
+    font: 700 0.72rem/1 "Geist", system-ui, sans-serif;
+    letter-spacing: 0.22em;
+    color: rgba(211, 201, 188, 0.4);
+  }
+  .scrap span {
+    font: 400 1.15rem/1 "Kapakana", cursive;
+    letter-spacing: normal;
+    text-transform: none;
+    color: rgba(137, 255, 228, 0.6);
+  }
+  .scrap-1 {
+    right: 4%;
+    top: 210px;
+    transform: rotate(8deg);
+  }
+  .scrap-2 {
+    left: 5%;
+    top: 24%;
+    transform: rotate(-84deg);
+    transform-origin: left top;
+    font-weight: 400;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    color: rgba(211, 201, 188, 0.3);
+  }
+
+  /* ---- tail ------------------------------------------------------------- */
+  .tail {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    margin-top: 3rem;
+  }
+  .tail-line {
+    font: 400 1.5rem/1 "Kapakana", cursive;
+    color: rgba(211, 201, 188, 0.5);
+    transform: rotate(-2deg);
+  }
+  .tail-link {
+    display: inline-block;
+    margin-top: 1rem;
+    font: 700 0.78rem/1 "Geist", system-ui, sans-serif;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #89ffe4;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(137, 255, 228, 0.4);
+    padding-bottom: 0.3rem;
+  }
+  .tail-link:hover,
+  .tail-link:focus-visible {
+    color: #fff;
+    border-color: #89ffe4;
+  }
+
+  /* ---- ambient motion (frozen page stays fully usable) ------------------ */
+  @media (prefers-reduced-motion: no-preference) {
+    .obj-spot {
+      animation: drift 9s ease-in-out infinite;
+      animation-delay: var(--d);
+    }
+    .obj-spot:hover,
+    .obj-spot:focus-within {
+      animation-play-state: paused;
+    }
+    @keyframes drift {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -5px; }
+    }
+  }
+
+  /* ---- mobile: the table tidies itself into a loose vertical scatter ---- */
+  @media (max-width: 767px) {
+    .scene {
+      padding-top: 2.75rem;
+    }
+    .mark-line {
+      max-width: 26ch;
+      margin-inline: auto;
+    }
+    .objects {
+      min-height: 0;
+      margin-top: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .obj-spot {
+      position: static;
+      margin-top: -18px;
+    }
+    .obj-spot:first-child {
+      margin-top: 0;
+    }
+    .obj-spot:nth-child(even) .obj {
+      transform: rotate(calc(var(--r) * 0.55)) translateX(10px);
+    }
+    .obj-spot:nth-child(odd) .obj {
+      transform: rotate(calc(var(--r) * 0.55)) translateX(-10px);
+    }
+    .obj:hover,
+    .obj:focus-visible {
+      transform: rotate(calc(var(--r) * 0.55)) translateY(-6px);
+    }
+    .obj--plate,
+    .obj--coaster {
+      width: min(88vw, 330px);
+    }
+    .obj--napkin,
+    .obj--note,
+    .obj--photo {
+      width: min(86vw, 310px);
+    }
+    .obj--receipt {
+      width: min(76vw, 250px);
+    }
+    .ring,
+    .crumbs,
+    .scrap-2 {
+      display: none;
+    }
+    .scrap-1 {
+      top: 130px;
+      right: 6%;
+    }
+  }
+</style>

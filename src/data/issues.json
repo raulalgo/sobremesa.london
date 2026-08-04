@@ -1,0 +1,105 @@
+{
+  "note": "Sample teaser data for /cover-candidates. Ten real issues; teasers composed from the issue index (not final published subtitles). Colors follow the no-repeat rule in chronological order; 017 = first pink binding, 021 = first sea binding (historically accurate).",
+  "issues": [
+    {
+      "number": "006",
+      "title": "A tale of two chairs",
+      "date": "2026-02-19",
+      "teaser": "Bad Bunny, Ivo Vilches, and the monobloc — the object counter-canon begins.",
+      "color": "aqua",
+      "colorHex": "#89FFE4",
+      "sections": ["Confession", "Shameless plug", "Rambling"],
+      "callbacks": []
+    },
+    {
+      "number": "009",
+      "title": "Drain the Slop",
+      "date": "2026-03-12",
+      "teaser": "The Valencia design scene, slop, and one rule: use AI as your tool or you'll become theirs.",
+      "color": "fire",
+      "colorHex": "#FF8000",
+      "sections": ["Rambling", "Growth Pill", "Rambling"],
+      "callbacks": []
+    },
+    {
+      "number": "012",
+      "title": "The sound of our own voice",
+      "date": "2026-04-02",
+      "teaser": "The Rams–Dyson–Jobs canon, the Henry hoover, and the little voice.",
+      "color": "pink",
+      "colorHex": "#FF006F",
+      "sections": ["Confession", "Growth Pill"],
+      "callbacks": []
+    },
+    {
+      "number": "015",
+      "title": "Platonic love",
+      "date": "2026-04-23",
+      "teaser": "The AI editing pipeline, disclosed. To design is to decide — and the popsicle-stand debt is paid.",
+      "color": "aqua",
+      "colorHex": "#89FFE4",
+      "sections": ["Confession", "Rambling", "Rambling"],
+      "callbacks": ["004"]
+    },
+    {
+      "number": "017",
+      "title": "The light ahead",
+      "date": "2026-05-07",
+      "teaser": "Post-chat AI with Diego Zaks, Cruz Novillo, Rosalía's Lux — and a paragraph left untranslated.",
+      "color": "pink",
+      "colorHex": "#FF006F",
+      "sections": ["Rambling", "Memory", "Share", "Coda"],
+      "callbacks": []
+    },
+    {
+      "number": "020",
+      "title": "Redesigning the wheel",
+      "date": "2026-05-28",
+      "teaser": "F1 as “Experience”, the Ive/Luce critique, and the reversal test.",
+      "color": "fire",
+      "colorHex": "#FF8000",
+      "sections": ["Rambling", "Rambling", "Growth Pill"],
+      "callbacks": ["005"]
+    },
+    {
+      "number": "021",
+      "title": "The AI fluency ladder",
+      "date": "2026-06-04",
+      "teaser": "Geoco's four levels, Azote's little birds, and headless design. Climb at your own pace.",
+      "color": "sea",
+      "colorHex": "#0051FF",
+      "sections": ["Rambling", "Rambling", "Rambling", "Coda"],
+      "callbacks": ["013", "017"]
+    },
+    {
+      "number": "025",
+      "title": "The artist's eye",
+      "date": "2026-07-02",
+      "teaser": "The 50-logos exercise and the Pompidou Málaga: they had to be painted first.",
+      "color": "pink",
+      "colorHex": "#FF006F",
+      "sections": ["Growth Pill", "Rambling", "Growth Pill"],
+      "callbacks": ["012"]
+    },
+    {
+      "number": "027",
+      "title": "Heavy duty",
+      "date": "2026-07-16",
+      "teaser": "OM-1 versus OM-5: pro tools, ugly but powerful, and the-newsroom giveaway.",
+      "color": "fire",
+      "colorHex": "#FF8000",
+      "sections": ["Rambling", "Inspiration", "Share"],
+      "callbacks": ["012", "021"]
+    },
+    {
+      "number": "028",
+      "title": "The second star",
+      "date": "2026-07-23",
+      "teaser": "Spain's World Cup, olive oils, bootleg jerseys — and a word for it: composure.",
+      "color": "aqua",
+      "colorHex": "#89FFE4",
+      "sections": ["Rambling", "Rambling", "Rambling"],
+      "callbacks": ["012", "020", "025"]
+    }
+  ]
+}
