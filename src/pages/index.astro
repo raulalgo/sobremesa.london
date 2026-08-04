@@ -1,5 +1,6 @@
 ---
 import IssueScroller from "../components/v2/IssueScroller.astro";
+import ScrollTuner from "../components/v2/ScrollTuner.astro";
 import Layout from "../layouts/Layout.astro";
 ---
 
@@ -8,6 +9,7 @@ import Layout from "../layouts/Layout.astro";
   description="Design Sobremesa — el archivo de issues, número a número."
 >
   <IssueScroller />
+  <ScrollTuner />
 </Layout>
 
 <style is:global>
@@ -15,10 +17,23 @@ import Layout from "../layouts/Layout.astro";
     The document itself is the scroll container, so the snap axis has to live
     on <html>. global.css pins html/body to height:100% — released here so the
     snap sections can stack past the viewport.
+
+    Which magnet is in force is the tuner's call (data-snap, written by
+    src/scripts/reel.ts): `mandatory` always lands on an issue, `proximity`
+    leaves short scrolls alone, `none` hands the snapping to the spring.
+    The attribute is only absent for the instant before the script runs.
   */
   html {
     height: auto;
+    scroll-snap-type: y proximity;
+  }
+
+  html[data-snap="mandatory"] {
     scroll-snap-type: y mandatory;
+  }
+
+  html[data-snap="none"] {
+    scroll-snap-type: none;
   }
 
   body {
