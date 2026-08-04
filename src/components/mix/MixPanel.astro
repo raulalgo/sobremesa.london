@@ -1,0 +1,474 @@
+---
+/**
+ * Control panel for the /mix liquid simulation.
+ *
+ * Pure markup — every control is declared with `data-param` (matching a key of
+ * MixParams) or `data-action`, and `src/scripts/mix-sim.ts` wires them up
+ * generically. Adding a slider here only needs a matching key in the params
+ * object; no extra JS.
+ */
+
+const brand = [
+  { name: "Pink", hex: "#FF006F" },
+  { name: "Aqua", hex: "#89FFE4" },
+  { name: "Fire", hex: "#FF8000" },
+  { name: "Sea", hex: "#0051FF" },
+  { name: "Leche", hex: "#F0E2CE" },
+  { name: "Café", hex: "#7C4A26" },
+];
+
+const pairs = [
+  { id: "cafe-con-leche", label: "Café con leche", a: "#F0E2CE", b: "#7C4A26" },
+  { id: "pink-aqua", label: "Pink × Aqua", a: "#89FFE4", b: "#FF006F" },
+  { id: "fire-sea", label: "Fire × Sea", a: "#FF8000", b: "#0051FF" },
+  { id: "sea-aqua", label: "Sea × Aqua", a: "#89FFE4", b: "#0051FF" },
+  { id: "pink-fire", label: "Pink × Fire", a: "#FF8000", b: "#FF006F" },
+  { id: "noche-pink", label: "Noche × Pink", a: "#0B0B0B", b: "#FF006F" },
+];
+
+const motion = [
+  { key: "speed", label: "Speed", min: 0, max: 3, step: 0.05 },
+  { key: "viscosity", label: "Viscosity", min: 0, max: 3, step: 0.01 },
+  { key: "vorticity", label: "Swirl", min: 0, max: 60, step: 1 },
+  { key: "buoyancy", label: "Sink / rise", min: -60, max: 80, step: 1 },
+  { key: "stir", label: "Stir force", min: 0, max: 1.5, step: 0.01 },
+  { key: "stirSpeed", label: "Stir speed", min: 0, max: 2, step: 0.01 },
+  { key: "pour", label: "Pour rate", min: 0, max: 1, step: 0.01 },
+  { key: "diffusion", label: "Diffusion", min: 0, max: 0.6, step: 0.01 },
+];
+
+const look = [
+  { key: "level", label: "Pour level", min: 0.05, max: 0.95, step: 0.01 },
+  { key: "contrast", label: "Edge sharpness", min: 0, max: 1, step: 0.01 },
+  { key: "relief", label: "Relief", min: 0, max: 1, step: 0.01 },
+  { key: "grain", label: "Grain", min: 0, max: 0.25, step: 0.005 },
+  { key: "vignette", label: "Vignette", min: 0, max: 0.7, step: 0.01 },
+  { key: "halo", label: "Wordmark halo", min: 0, max: 1, step: 0.01 },
+];
+---
+
+<div
+  id="mix-panel"
+  class="mix-panel fixed z-30 text-white/85 inset-x-3 bottom-3 md:inset-x-auto md:top-4 md:right-4 md:bottom-4 md:w-[310px]"
+>
+  <button
+    type="button"
+    data-action="toggle"
+    aria-expanded="true"
+    aria-controls="mix-panel-body"
+    class="mix-toggle flex w-full items-center justify-between gap-3 border border-white/15 bg-black/70 px-4 py-3 text-left backdrop-blur-xl transition-colors hover:bg-black/80"
+  >
+    <span class="text-[11px] font-bold tracking-[0.16em] text-pink uppercase">Mix lab</span>
+    <span class="mix-chevron text-white/50" aria-hidden="true">▾</span>
+  </button>
+
+  <div
+    id="mix-panel-body"
+    class="mix-panel__body space-y-5 overflow-y-auto rounded-b-xl border border-t-0 border-white/15 bg-black/70 px-4 py-4 backdrop-blur-xl"
+  >
+    <!-- Liquids -->
+    <section class="space-y-3">
+      <h2 class="mix-heading">Liquids</h2>
+
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block space-y-1.5">
+          <span class="mix-label">Liquid A</span>
+          <input type="color" data-param="colorA" class="mix-color" aria-label="Colour of liquid A" />
+        </label>
+        <label class="block space-y-1.5">
+          <span class="mix-label">Liquid B</span>
+          <input type="color" data-param="colorB" class="mix-color" aria-label="Colour of liquid B" />
+        </label>
+      </div>
+
+      <button type="button" data-action="swap" class="mix-button w-full">Swap A ↔ B</button>
+
+      <div class="space-y-1.5">
+        <span class="mix-label">Brand palette → A</span>
+        <div class="flex flex-wrap gap-1.5">
+          {
+            brand.map((c) => (
+              <button
+                type="button"
+                data-swatch={c.hex}
+                data-target="a"
+                title={`${c.name} ${c.hex}`}
+                aria-label={`Set liquid A to ${c.name}`}
+                class="mix-swatch"
+                style={`background:${c.hex}`}
+              />
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="space-y-1.5">
+        <span class="mix-label">Brand palette → B</span>
+        <div class="flex flex-wrap gap-1.5">
+          {
+            brand.map((c) => (
+              <button
+                type="button"
+                data-swatch={c.hex}
+                data-target="b"
+                title={`${c.name} ${c.hex}`}
+                aria-label={`Set liquid B to ${c.name}`}
+                class="mix-swatch"
+                style={`background:${c.hex}`}
+              />
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="space-y-1.5">
+        <span class="mix-label">Presets</span>
+        <div class="grid grid-cols-2 gap-1.5">
+          {
+            pairs.map((p) => (
+              <button type="button" data-preset={p.id} class="mix-preset">
+                <span
+                  class="mix-preset__chip"
+                  style={`background:linear-gradient(120deg, ${p.a} 0%, ${p.a} 38%, ${p.b} 62%, ${p.b} 100%)`}
+                />
+                <span class="truncate">{p.label}</span>
+              </button>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Motion -->
+    <section class="space-y-2.5">
+      <h2 class="mix-heading">Fluid</h2>
+      {
+        motion.map((s) => (
+          <label class="block">
+            <span class="mix-label flex items-baseline justify-between">
+              <span>{s.label}</span>
+              <span data-output class="tabular-nums text-white/45" />
+            </span>
+            <span class="block">
+              <input
+                type="range"
+                data-param={s.key}
+                min={s.min}
+                max={s.max}
+                step={s.step}
+                class="mix-range"
+              />
+            </span>
+          </label>
+        ))
+      }
+    </section>
+
+    <!-- Look -->
+    <section class="space-y-2.5">
+      <h2 class="mix-heading">Render</h2>
+      {
+        look.map((s) => (
+          <label class="block">
+            <span class="mix-label flex items-baseline justify-between">
+              <span>{s.label}</span>
+              <span data-output class="tabular-nums text-white/45" />
+            </span>
+            <span class="block">
+              <input
+                type="range"
+                data-param={s.key}
+                min={s.min}
+                max={s.max}
+                step={s.step}
+                class="mix-range"
+              />
+            </span>
+          </label>
+        ))
+      }
+    </section>
+
+    <!-- Quality -->
+    <section class="space-y-2.5">
+      <h2 class="mix-heading">Quality</h2>
+      <div class="grid grid-cols-2 gap-2">
+        <label class="block space-y-1.5">
+          <span class="mix-label">Sim grid</span>
+          <select data-param="simRes" class="mix-select">
+            <option value="64">64</option>
+            <option value="96">96</option>
+            <option value="128">128</option>
+            <option value="192">192</option>
+            <option value="256">256</option>
+          </select>
+        </label>
+        <label class="block space-y-1.5">
+          <span class="mix-label">Colour grid</span>
+          <select data-param="dyeRes" class="mix-select">
+            <option value="256">256</option>
+            <option value="512">512</option>
+            <option value="768">768</option>
+            <option value="1024">1024</option>
+          </select>
+        </label>
+      </div>
+      <label class="block">
+        <span class="mix-label flex items-baseline justify-between">
+          <span>Solver passes</span>
+          <span data-output class="tabular-nums text-white/45"></span>
+        </span>
+        <span class="block">
+          <input type="range" data-param="iterations" min="6" max="40" step="1" class="mix-range" />
+        </span>
+      </label>
+    </section>
+
+    <!-- Actions -->
+    <section class="space-y-2 border-t border-white/10 pt-4">
+      <div class="grid grid-cols-2 gap-1.5">
+        <button type="button" data-action="reset" class="mix-button">Re-pour</button>
+        <button type="button" data-action="stir" class="mix-button">Stir</button>
+        <button type="button" data-action="pause" class="mix-button" aria-pressed="false">Pause</button>
+        <button type="button" data-action="randomize" class="mix-button">Randomise</button>
+        <button type="button" data-action="save" class="mix-button">Save PNG</button>
+        <button type="button" data-action="copy" class="mix-button">Copy JSON</button>
+      </div>
+      <button type="button" data-action="defaults" class="mix-button w-full">Reset all settings</button>
+      <p class="pt-1 text-[10px] leading-relaxed text-white/40">
+        Drag the background to stir · double-click to pour · <kbd class="mix-kbd">H</kbd> hides this
+        panel · <kbd class="mix-kbd">R</kbd> re-pours · <kbd class="mix-kbd">Space</kbd> pauses.
+      </p>
+    </section>
+  </div>
+</div>
+
+<style>
+  .mix-panel__body {
+    max-height: min(62svh, 640px);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  }
+
+  @media (min-width: 768px) {
+    .mix-panel__body {
+      max-height: calc(100svh - 6.5rem);
+    }
+  }
+
+  /*
+   * Default open state is decided here, not in JS: collapsed on phones so the
+   * wordmark stays clear, open on desktop. An explicit toggle sets both
+   * `is-open` and `is-collapsed`, so it wins under either query.
+   */
+  .mix-panel:not(.is-open) .mix-panel__body {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .mix-panel:not(.is-collapsed) .mix-panel__body {
+      display: block;
+    }
+  }
+
+  .mix-panel:not(.is-open) .mix-toggle {
+    border-radius: 0.75rem;
+  }
+
+  @media (min-width: 768px) {
+    .mix-panel:not(.is-collapsed) .mix-toggle {
+      border-radius: 0.75rem 0.75rem 0 0;
+    }
+  }
+
+  .mix-chevron {
+    transition: transform 0.18s ease;
+  }
+
+  .mix-panel:not(.is-open) .mix-chevron {
+    transform: rotate(-90deg);
+  }
+
+  @media (min-width: 768px) {
+    .mix-panel:not(.is-collapsed) .mix-chevron {
+      transform: none;
+    }
+  }
+
+  .mix-heading {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .mix-label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  /* Sliders --------------------------------------------------------------- */
+  .mix-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 18px;
+    background: transparent;
+    cursor: ew-resize;
+  }
+
+  .mix-range::-webkit-slider-runnable-track {
+    height: 2px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .mix-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    margin-top: -5px;
+    border-radius: 50%;
+    background: var(--color-pink);
+    border: none;
+    box-shadow: 0 0 0 3px rgba(255, 0, 111, 0.18);
+  }
+
+  .mix-range::-moz-range-track {
+    height: 2px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .mix-range::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-pink);
+  }
+
+  .mix-range:focus-visible {
+    outline: 1px solid var(--color-pink);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Colours --------------------------------------------------------------- */
+  .mix-color {
+    width: 100%;
+    height: 32px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .mix-color::-webkit-color-swatch-wrapper {
+    padding: 2px;
+  }
+
+  .mix-color::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+  }
+
+  .mix-color::-moz-color-swatch {
+    border: none;
+    border-radius: 4px;
+  }
+
+  .mix-swatch {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    cursor: pointer;
+    transition:
+      transform 0.12s ease,
+      border-color 0.12s ease;
+  }
+
+  .mix-swatch:hover {
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+
+  /* Buttons --------------------------------------------------------------- */
+  .mix-button {
+    padding: 7px 8px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    cursor: pointer;
+    transition:
+      background 0.12s ease,
+      border-color 0.12s ease;
+  }
+
+  .mix-button:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .mix-button[aria-pressed="true"] {
+    background: rgba(255, 0, 111, 0.22);
+    border-color: var(--color-pink);
+  }
+
+  .mix-preset {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 7px;
+    font-size: 10.5px;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .mix-preset:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .mix-preset__chip {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .mix-select {
+    width: 100%;
+    padding: 6px 7px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .mix-select option {
+    background: #111;
+  }
+
+  .mix-kbd {
+    padding: 1px 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    font-size: 9px;
+  }
+</style>

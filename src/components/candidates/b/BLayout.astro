@@ -1,0 +1,100 @@
+---
+// Direction B — "El Semanario". Own layout: warm paper ground, umber ink,
+// Geist (labels/numerals) + Kapakana (script) + Newsreader (reading serif).
+interface Props {
+  title: string;
+  description?: string;
+}
+const {
+  title,
+  description = "Design Sobremesa — semanario de diseño, AI y cultura pop. Desde 2026.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Kapakana&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500;1,6..72,600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    /* The photographic palette promoted to the neutral system */
+    --paper: #ece5d6;
+    --paper-deep: #e2d8c4;
+    --ink: #352c1f;
+    --ink-soft: #534530;
+    --ink-faint: #7d6e53;
+    --rule: rgba(83, 69, 48, 0.28);
+    --rule-strong: rgba(53, 44, 31, 0.85);
+    /* Rationed sparks */
+    --pink: #ff006f;
+    --aqua: #89ffe4;
+    --fire: #ff8000;
+    --sea: #0051ff;
+
+    --grotesque: "Geist", system-ui, sans-serif;
+    --script: "Kapakana", cursive;
+    --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    background: var(--paper);
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    font-kerning: normal;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100%;
+  }
+
+  ::selection {
+    background: var(--pink);
+    color: var(--paper);
+  }
+
+  a {
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--sea);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+</style>

@@ -17,3 +17,7 @@ npm-debug.log*
 
 # design source (raw cover candidates — the used image lives in src/assets/)
 Cover candidates/
+
+# full-res cover masters (136 MB). src/assets/covers/ holds the web-sized
+# derivatives — regenerate them with `node scripts/downsample-covers.mjs`.
+covers-original/

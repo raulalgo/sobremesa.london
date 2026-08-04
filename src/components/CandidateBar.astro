@@ -1,0 +1,119 @@
+---
+// Floating switcher for the /cover-candidates exploration.
+// Self-contained: no Tailwind classes, no global tokens, works on dark and light grounds.
+interface Props {
+  current: "a" | "b" | "c";
+  page: "front" | "article";
+}
+const { current, page } = Astro.props;
+const variants = [
+  { key: "a", label: "A", name: "La Colección" },
+  { key: "b", label: "B", name: "El Semanario" },
+  { key: "c", label: "C", name: "La Sobremesa" },
+] as const;
+const hrefFor = (key: string, p: Props["page"]) =>
+  `/cover-candidates/${key}/${p === "article" ? "article" : ""}`;
+const currentName = variants.find((v) => v.key === current)?.name;
+---
+
+<nav class="candidate-bar" aria-label="Cover candidates">
+  <span class="cb-name">{currentName}</span>
+  <span class="cb-group" role="group">
+    {
+      variants.map((v) => (
+        <a
+          href={hrefFor(v.key, page)}
+          class:list={["cb-tab", { active: v.key === current }]}
+          aria-current={v.key === current ? "page" : undefined}
+          title={v.name}
+        >
+          {v.label}
+        </a>
+      ))
+    }
+  </span>
+  <span class="cb-sep" aria-hidden="true"></span>
+  <span class="cb-group" role="group">
+    <a
+      href={hrefFor(current, "front")}
+      class:list={["cb-page", { active: page === "front" }]}
+      aria-current={page === "front" ? "page" : undefined}>Portada</a
+    >
+    <a
+      href={hrefFor(current, "article")}
+      class:list={["cb-page", { active: page === "article" }]}
+      aria-current={page === "article" ? "page" : undefined}>Artículo</a
+    >
+  </span>
+</nav>
+
+<style>
+  .candidate-bar {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(10, 10, 12, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+    font-family: "Geist", system-ui, sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.75);
+    white-space: nowrap;
+  }
+  .cb-name {
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .cb-group {
+    display: flex;
+    gap: 4px;
+  }
+  .cb-tab,
+  .cb-page {
+    display: inline-block;
+    padding: 4px 9px;
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-weight: 700;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .cb-page {
+    font-weight: 400;
+  }
+  .cb-tab:hover,
+  .cb-page:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+  .cb-tab.active {
+    background: #ff006f;
+    color: #fff;
+  }
+  .cb-page.active {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+  }
+  .cb-sep {
+    width: 1px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+  @media (max-width: 480px) {
+    .cb-name {
+      display: none;
+    }
+  }
+</style>

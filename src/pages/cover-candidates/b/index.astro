@@ -1,0 +1,369 @@
+---
+// Direction B — "El Semanario". Front page: a print-journal index.
+import BLayout from "../../../components/candidates/b/BLayout.astro";
+import CandidateBar from "../../../components/CandidateBar.astro";
+import data from "../../../data/issues.json";
+
+// Newest entrega first, like a weekly's index.
+const issues = [...data.issues].reverse();
+
+const MESES = [
+  "ENE", "FEB", "MAR", "ABR", "MAY", "JUN",
+  "JUL", "AGO", "SEP", "OCT", "NOV", "DIC",
+];
+const fmt = (iso: string) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${d} ${MESES[m - 1]} ${y}`;
+};
+---
+
+<BLayout title="Design Sobremesa — El Semanario">
+  <div class="page">
+    <header class="masthead">
+      <p class="overline">Semanario de diseño, AI y cultura pop</p>
+      <h1 class="nameplate">
+        <span class="grot">SOBREMESA</span><span class="scr">london</span>
+      </h1>
+      <div class="folio" role="presentation">
+        <span>DESDE 2026</span>
+        <span>Nº 006–028</span>
+        <span>MÁS SOON</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="index-head">
+        <h2>Índice de entregas</h2>
+        <p class="legend"><span class="legend-arrow">→</span> hilo entre números</p>
+      </div>
+
+      <ol class="issues">
+        {
+          issues.map((issue, i) => (
+            <li class:list={["row", { lead: i === 0 }]}>
+              <a class="row-link" href="/cover-candidates/b/article">
+                <span
+                  class="numeral"
+                  style={`--spot:${issue.colorHex}`}
+                  aria-label={`Número ${issue.number}`}
+                >
+                  {issue.number}
+                </span>
+                <span class="body">
+                  <h3 class="title">{issue.title}</h3>
+                  <p class="teaser">{issue.teaser}</p>
+                  <p class="meta">
+                    <time datetime={issue.date}>{fmt(issue.date)}</time>
+                    <span class="dot" aria-hidden="true">·</span>
+                    <span class="sections">{issue.sections.join(" · ")}</span>
+                    {issue.callbacks.length > 0 && (
+                      <span
+                        class="threads"
+                        style={`--spot:${issue.colorHex}`}
+                        title={`Este número conversa con ${issue.callbacks.join(", ")}`}
+                      >
+                        <span class="arrow" aria-hidden="true">→</span>
+                        {issue.callbacks.join(" · ")}
+                      </span>
+                    )}
+                  </p>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </main>
+
+    <footer class="foot">
+      <p>
+        <span class="foot-grot">SOBREMESA</span>
+        <span class="foot-scr">london</span>
+        <span class="foot-dot" aria-hidden="true">·</span>
+        la sobremesa continúa
+        <span class="foot-dot" aria-hidden="true">·</span>
+        MÁS SOON
+      </p>
+    </footer>
+  </div>
+
+  <CandidateBar current="b" page="front" />
+</BLayout>
+
+<style>
+  .page {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: clamp(2.5rem, 7vh, 5rem) 1.25rem 7rem;
+  }
+
+  /* ---------- Masthead: print nameplate ---------- */
+
+  .masthead {
+    text-align: center;
+  }
+
+  .overline {
+    font-family: var(--grotesque);
+    font-weight: 700;
+    font-size: 0.625rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 1.6rem;
+  }
+
+  .nameplate {
+    line-height: 0.9;
+    margin-bottom: 1.9rem;
+  }
+
+  .nameplate .grot {
+    font-family: var(--grotesque);
+    font-weight: 700;
+    font-size: clamp(2.6rem, 10vw, 5.1rem);
+    letter-spacing: 0.015em;
+    color: var(--ink);
+  }
+
+  .nameplate .scr {
+    font-family: var(--script);
+    font-weight: 400;
+    font-size: clamp(1.7rem, 6.4vw, 3.2rem);
+    color: var(--ink-soft);
+    display: inline-block;
+    margin-left: -0.35em;
+    transform: translateY(0.32em) rotate(-3deg);
+  }
+
+  .folio {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    border-top: 1px solid var(--rule-strong);
+    border-bottom: 2px solid var(--rule-strong);
+    padding: 0.5rem 0.1rem 0.55rem;
+    font-family: var(--grotesque);
+    font-weight: 500;
+    font-size: 0.6875rem;
+    letter-spacing: 0.22em;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Index head ---------- */
+
+  .index-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin: 2.8rem 0 0.4rem;
+  }
+
+  .index-head h2 {
+    font-family: var(--grotesque);
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .legend {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.875rem;
+    color: var(--ink-faint);
+  }
+
+  .legend-arrow {
+    font-style: normal;
+    font-family: var(--grotesque);
+    font-weight: 700;
+  }
+
+  /* ---------- The index rows ---------- */
+
+  .issues {
+    list-style: none;
+  }
+
+  .row {
+    border-top: 1px solid var(--rule);
+  }
+
+  .row:first-child {
+    border-top: 2px solid var(--rule-strong);
+  }
+
+  .row:last-child {
+    border-bottom: 2px solid var(--rule-strong);
+  }
+
+  .row-link {
+    display: grid;
+    grid-template-columns: 5.6rem 1fr;
+    gap: 1.4rem;
+    padding: 1.55rem 0.1rem 1.7rem;
+    text-decoration: none;
+  }
+
+  /* The one spark per row: the numeral takes its fluorescent,
+     with an umber-ink misregistration layer beneath — a print artefact
+     that also keeps aqua legible on paper. */
+  .numeral {
+    font-family: var(--grotesque);
+    font-weight: 700;
+    font-size: 2.1rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--spot);
+    text-shadow: 0.05em 0.05em 0 var(--ink);
+    padding-top: 0.28rem;
+    justify-self: end;
+    text-align: right;
+  }
+
+  .title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.45rem;
+    line-height: 1.18;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+    text-wrap: balance;
+    transition: text-decoration-color 0.15s ease;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    text-decoration-color: transparent;
+  }
+
+  .row-link:hover .title,
+  .row-link:focus-visible .title {
+    text-decoration-color: var(--ink-soft);
+  }
+
+  .teaser {
+    font-family: var(--serif);
+    font-size: 1.02rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 34rem;
+    margin-top: 0.35rem;
+  }
+
+  .meta {
+    margin-top: 0.7rem;
+    font-family: var(--grotesque);
+    font-weight: 500;
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.55rem;
+    row-gap: 0.3rem;
+  }
+
+  .dot {
+    color: var(--rule);
+  }
+
+  .threads {
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  .threads .arrow {
+    color: var(--spot);
+    text-shadow: 0.06em 0.06em 0 var(--ink);
+    font-weight: 700;
+    margin-right: 0.2em;
+  }
+
+  /* Lead entry: the current entrega, one step up the scale */
+  .row.lead .numeral {
+    font-size: 2.9rem;
+    padding-top: 0.1rem;
+  }
+
+  .row.lead .title {
+    font-size: 2rem;
+  }
+
+  .row.lead .teaser {
+    font-size: 1.1rem;
+  }
+
+  /* ---------- Footer ---------- */
+
+  .foot {
+    margin-top: 3.2rem;
+    text-align: center;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--ink-faint);
+  }
+
+  .foot-grot {
+    font-family: var(--grotesque);
+    font-style: normal;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.24em;
+    color: var(--ink-soft);
+  }
+
+  .foot-scr {
+    font-family: var(--script);
+    font-style: normal;
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+  }
+
+  .foot-dot {
+    color: var(--rule);
+    margin: 0 0.35rem;
+  }
+
+  /* ---------- Mobile ---------- */
+
+  @media (max-width: 560px) {
+    .row-link {
+      grid-template-columns: 3.4rem 1fr;
+      gap: 0.9rem;
+      padding-block: 1.3rem 1.45rem;
+    }
+
+    .numeral {
+      font-size: 1.5rem;
+      padding-top: 0.2rem;
+    }
+
+    .row.lead .numeral {
+      font-size: 2rem;
+      padding-top: 0.1rem;
+    }
+
+    .title {
+      font-size: 1.25rem;
+    }
+
+    .row.lead .title {
+      font-size: 1.6rem;
+    }
+
+    .folio {
+      letter-spacing: 0.12em;
+      font-size: 0.625rem;
+    }
+  }
+</style>

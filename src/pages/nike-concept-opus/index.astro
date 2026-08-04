@@ -1,0 +1,1091 @@
+---
+// /nike-concept-opus — the Nike After Dark Tour grammar reinterpreted for
+// sobremesa.london. Nike's city index becomes the issue index: the tour has
+// thirty stops and every one of them is a table somebody just got up from.
+//
+// Dark → light: paper ground, umber ink, the four sparks held for hover only.
+// Motion is CSS + a little IntersectionObserver. No canvas, no dependencies.
+import NikeOpusLayout from "../../components/nike-opus/NikeOpusLayout.astro";
+import data from "../../data/all-issues.json";
+
+const issues = data.issues;
+
+const MONTHS = [
+  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+];
+const stamp = (iso: string) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${String(d).padStart(2, "0")} ${MONTHS[m - 1]} ${y}`;
+};
+
+// Nike keeps one size and lets long names run wide. Our titles vary from "ODE"
+// to "Do AI hammers dream of electronic nails", so size steps down with length
+// — which buys back the ragged editorial rhythm the reference gets for free.
+const sizeOf = (t: string) => (t.length <= 15 ? "xl" : t.length <= 26 ? "lg" : "md");
+
+// The indentation pattern. Nike's rows never form a clean left edge.
+const INDENT = [0, 7, 2, 12, 0, 5, 16, 3, 9, 1, 6, 0];
+const indentOf = (i: number, size: string) => {
+  const raw = INDENT[i % INDENT.length];
+  return size === "md" ? Math.min(raw, 3) : size === "lg" ? Math.min(raw, 9) : raw;
+};
+
+const rows = issues.map((issue, i) => {
+  const size = sizeOf(issue.title);
+  // The superscript is glued to the final word so a wrap moves the pair together.
+  // Left inline it would drop onto a line of its own and open a dead band.
+  const words = issue.title.split(" ");
+  return {
+    ...issue,
+    size,
+    indent: indentOf(i, size),
+    stamped: stamp(issue.date),
+    head: words.slice(0, -1).join(" "),
+    tail: words[words.length - 1],
+  };
+});
+
+// Where the two photography bands interrupt the list.
+const BANDS: Record<number, { n: string; title: string; caption: string; ph: string }> = {
+  10: {
+    n: "02",
+    title: "Las sillas",
+    caption: "veintitrés sillas, ninguna genérica",
+    ph: "PLACEHOLDER — tapas bar, mid-afternoon · specific nameable chairs, bentwood and monobloc · people in the background, table empty · duotone paper/ink",
+  },
+  21: {
+    n: "03",
+    title: "Los restos",
+    caption: "el final de la comida no es el final",
+    ph: "PLACEHOLDER — diner booth after service · scraped plates, drained glasses, crumpled napkins · camera at table height in the vacated seat · duotone paper/ink",
+  },
+};
+
+// Nike's coach cards, rebuilt as the lexicon this newsletter actually owns.
+const LEXICON = [
+  { term: "to design is to decide", issue: "015" },
+  { term: "the ladder", issue: "021" },
+  { term: "headless design", issue: "021" },
+  { term: "the reversal test", issue: "020" },
+  { term: "composure", issue: "028" },
+  { term: "the popsicle stand", issue: "004" },
+];
+
+// The globe becomes a table seen from above: thirty places set around one ellipse.
+const spots = issues.map((issue, i) => {
+  const a = (i / issues.length) * Math.PI * 2 - Math.PI / 2;
+  return {
+    ...issue,
+    x: 50 + 41 * Math.cos(a),
+    y: 50 + 35 * Math.sin(a),
+    // Labels point inward, across the table: outward ones on the widest seats
+    // run past the viewport edge.
+    side: Math.cos(a) >= 0 ? "left" : "right",
+  };
+});
+
+const SUBSCRIBE = "https://designsobremesa.substack.com/subscribe";
+---
+
+<NikeOpusLayout title="Sobremesa Tour ©2026 — the complete index">
+  <!-- ── Nav ─────────────────────────────────────────────────────────────── -->
+  <nav class="nav" id="nav" aria-label="Primary">
+    <a class="lockup" href="#top">
+      <span class="lockup-main">SOBREMESA</span>
+      <span class="lockup-script">london</span>
+      <span class="lockup-year">©2026</span>
+    </a>
+    <a class="nav-pill" href={SUBSCRIBE} target="_blank" rel="noopener">
+      <span>SUSCRÍBETE</span>
+      <span class="nav-pill-icon" aria-hidden="true">↗</span>
+    </a>
+  </nav>
+
+  <!-- ── Hero ────────────────────────────────────────────────────────────── -->
+  <header class="hero" id="top">
+    <div class="hero-marquee" aria-hidden="true">
+      <div class="hero-marquee-track">
+        {
+          Array.from({ length: 6 }).map(() => (
+            <span>SOBREMESA TOUR ©2026 · TREINTA PARADAS · </span>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="hero-inner">
+      <h1 class="hero-title">
+        Sobremesa<br />Tour <span class="hero-c">©</span>2026
+      </h1>
+    </div>
+
+    <div class="hero-img ph" data-parallax>
+      <span class="ph-label"
+        >PLACEHOLDER 01 — chiringuito table, just vacated · camera at table height,
+        in the chair that was left empty · the world beyond it still populated ·
+        duotone paper/ink</span
+      >
+    </div>
+
+    <div class="hero-foot">
+      <p class="hero-meta">
+        <span>30 PARADAS</span><span class="dot">·</span><span>UNA MESA</span><span
+          class="dot">·</span
+        ><span>DESDE 2026</span>
+      </p>
+      <span class="hero-rule" aria-hidden="true"></span>
+      <span class="hero-sit" aria-hidden="true">SIÉNTATE ↓</span>
+    </div>
+  </header>
+
+  <!-- ── 01 La mesa ──────────────────────────────────────────────────────── -->
+  <section class="manifesto reveal" aria-labelledby="m-h">
+    <p class="sec-n">01</p>
+    <div class="manifesto-body">
+      <h2 class="sec-h" id="m-h">La mesa</h2>
+      <p class="lede">
+        Every Wednesday since January, one stop. Design, AI and pop culture sitting
+        at the same table — and nobody in any hurry to get up.
+      </p>
+      <p>
+        Thirty issues. The plates are scraped, the glasses drained, the chairs left
+        at odd angles. Eso no es el final de la comida. That is the good part — the
+        hour after, when the arguing starts and somebody finally says the true thing.
+      </p>
+      <p class="punch">Esta mesa es personal.</p>
+    </div>
+  </section>
+
+  <!-- ── The index ───────────────────────────────────────────────────────── -->
+  <section class="index" aria-label="Every issue">
+    {
+      rows.map((row, i) => (
+        <>
+          {BANDS[i] && (
+            <figure class="band reveal">
+              <div class="band-img ph">
+                <span class="ph-label">{BANDS[i].ph}</span>
+              </div>
+              <figcaption class="band-cap">
+                <span class="band-n">{BANDS[i].n}</span>
+                <span class="band-title">{BANDS[i].title}</span>
+                <span class="band-script">{BANDS[i].caption}</span>
+              </figcaption>
+            </figure>
+          )}
+
+          <a
+            class:list={["row", "reveal", `is-${row.size}`, { "is-aqua": row.color === "aqua" }]}
+            href={row.url}
+            target="_blank"
+            rel="noopener"
+            style={`--c:${row.colorHex};--off:${row.indent}`}
+          >
+            <span class="row-title">
+              {row.head && `${row.head} `}<span class="row-last"
+                >{row.tail}<sup class="row-meta">
+                  Nº {row.number}
+                  <span class="row-date">{row.stamped}</span>
+                </sup></span
+              >
+            </span>
+            <span class="row-tail" aria-hidden="true">
+              <span class="row-badge">SERVIDO</span>
+              <span class="row-arrow">↗</span>
+            </span>
+          </a>
+        </>
+      ))
+    }
+
+    <div class="row is-next reveal" aria-hidden="true">
+      <span class="row-title">
+        En la mesa…
+        <sup class="row-meta">Nº 030<span class="row-date">MIÉRCOLES</span></sup>
+      </span>
+    </div>
+  </section>
+
+  <!-- ── 04 El vocabulario ───────────────────────────────────────────────── -->
+  <section class="lexicon reveal" aria-labelledby="l-h">
+    <p class="sec-n">04</p>
+    <div class="lexicon-body">
+      <h2 class="sec-h" id="l-h">El vocabulario</h2>
+      <p class="lede">Words this table made, and the stop where each one was served.</p>
+      <ul class="lex-grid">
+        {
+          LEXICON.map((l) => (
+            <li class="lex">
+              <span class="lex-term">{l.term}</span>
+              <span class="lex-issue">{l.issue}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── 05 The table map (the globe, seen from above) ───────────────────── -->
+  <section class="map-sec reveal" aria-labelledby="map-h">
+    <p class="sec-n">05</p>
+    <div class="map-body">
+      <h2 class="sec-h" id="map-h">La mesa entera</h2>
+      <p class="lede">Thirty places set around one table. Todas ocupadas, todas vacías.</p>
+
+      <div class="map" role="list">
+        <div class="map-table" aria-hidden="true"></div>
+        <span class="map-center" aria-hidden="true">
+          <span class="map-center-main">LA MESA</span>
+          <span class="map-center-sub">030 PARADAS</span>
+        </span>
+        {
+          spots.map((s) => (
+            <a
+              class:list={["spot", `spot-${s.side}`]}
+              href={s.url}
+              target="_blank"
+              rel="noopener"
+              role="listitem"
+              style={`--c:${s.colorHex};left:${s.x.toFixed(3)}%;top:${s.y.toFixed(3)}%`}
+            >
+              <span class="spot-dot" aria-hidden="true" />
+              <span class="spot-n">{s.number}</span>
+              <span class="spot-title">{s.title}</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ──────────────────────────────────────────────────────────── -->
+  <footer class="foot">
+    <div class="foot-marquee" aria-hidden="true">
+      <div class="foot-track foot-track-a">
+        {Array.from({ length: 4 }).map(() => <span>Quédate de sobremesa —&nbsp;</span>)}
+      </div>
+      <div class="foot-track foot-track-b">
+        {
+          Array.from({ length: 4 }).map(() => (
+            <span>una entrega cada miércoles · desde 2026 —&nbsp;</span>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="foot-body">
+      <div class="foot-index">
+        <p class="foot-label">Todas las paradas</p>
+        <ul>
+          {
+            issues.map((issue) => (
+              <li>
+                <a href={issue.url} target="_blank" rel="noopener">
+                  <span class="fi-n">{issue.number}</span>
+                  <span class="fi-t">{issue.title}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="foot-cta">
+        <p class="foot-label">La próxima</p>
+        <p class="foot-pitch">
+          Design, AI y pop culture. Una entrega cada miércoles, y la silla ya está
+          puesta.
+        </p>
+        <a class="foot-btn" href={SUBSCRIBE} target="_blank" rel="noopener">
+          SUSCRÍBETE <span aria-hidden="true">↗</span>
+        </a>
+        <p class="foot-fine">
+          designsobremesa.substack.com · <span class="foot-script">sobremesa</span
+          ><span class="foot-script-l">london</span>
+        </p>
+      </div>
+    </div>
+  </footer>
+</NikeOpusLayout>
+
+<style>
+  /* ── Placeholder blocks ─────────────────────────────────────────────────
+     Sized and positioned exactly where the real photograph goes. Swapping one
+     in is a one-line change: replace the .ph div with an <Image />. */
+  .ph {
+    position: relative;
+    background: var(--paper-deep);
+    border: 1px solid var(--rule);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .ph::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.35;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* The faint diagonal that says "not a real image yet". */
+  .ph::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent 0 22px,
+      rgba(83, 69, 48, 0.05) 22px 23px
+    );
+  }
+  .ph-label {
+    position: relative;
+    z-index: 1;
+    max-width: 46ch;
+    padding: 1.4rem;
+    text-align: center;
+    font-size: clamp(0.6rem, 0.92vw, 0.75rem);
+    line-height: 1.65;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ── Nav ────────────────────────────────────────────────────────────────*/
+  .nav {
+    position: fixed;
+    z-index: 100;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(96vw, 1500px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 0.7rem 0.6rem 1.3rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    transition: background 0.35s ease, border-color 0.35s ease,
+      backdrop-filter 0.35s ease;
+  }
+  .nav.scrolled {
+    background: rgba(236, 229, 214, 0.72);
+    border-color: var(--rule);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  }
+  .lockup {
+    display: flex;
+    align-items: baseline;
+    gap: 0.42rem;
+    line-height: 1;
+  }
+  .lockup-main {
+    font-weight: 900;
+    font-size: clamp(0.78rem, 1.15vw, 0.98rem);
+    letter-spacing: 0.02em;
+  }
+  .lockup-script {
+    font-family: var(--script);
+    font-size: clamp(1rem, 1.6vw, 1.35rem);
+    color: var(--ink-soft);
+    line-height: 0.8;
+  }
+  .lockup-year {
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+  }
+  .nav-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.6rem 1.05rem;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .nav-pill:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .nav-pill-icon {
+    font-weight: 400;
+  }
+
+  /* ── Hero ───────────────────────────────────────────────────────────────*/
+  .hero {
+    position: relative;
+    padding: clamp(7rem, 15vh, 11rem) 0 0;
+    overflow: hidden;
+  }
+  .hero-marquee {
+    position: absolute;
+    top: clamp(6rem, 13vh, 9.5rem);
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .hero-marquee-track {
+    display: flex;
+    width: max-content;
+    font-weight: 900;
+    font-size: clamp(3rem, 9vw, 8rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: rgba(83, 69, 48, 0.09);
+  }
+  .hero-inner {
+    position: relative;
+    z-index: 2;
+    padding: 0 clamp(1rem, 3.5vw, 3.6rem);
+  }
+  .hero-title {
+    font-weight: 900;
+    font-size: clamp(3.2rem, 12.2vw, 14rem);
+    line-height: 0.82;
+    letter-spacing: -0.045em;
+    text-transform: uppercase;
+  }
+  .hero-c {
+    font-weight: 400;
+  }
+  .hero-img {
+    position: relative;
+    z-index: 1;
+    margin: clamp(-3.5rem, -4vw, -1.5rem) clamp(1rem, 3.5vw, 3.6rem) 0;
+    height: clamp(20rem, 58vh, 38rem);
+    will-change: transform;
+  }
+  .hero-foot {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 1.5rem clamp(1rem, 3.5vw, 3.6rem) 0;
+    font-size: clamp(0.62rem, 0.95vw, 0.75rem);
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--ink-soft);
+  }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .hero-meta .dot {
+    color: var(--ink-faint);
+  }
+  .hero-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+  .hero-sit {
+    color: var(--ink-faint);
+    letter-spacing: 0.24em;
+    white-space: nowrap;
+  }
+
+  /* ── Numbered sections ──────────────────────────────────────────────────*/
+  .manifesto,
+  .lexicon,
+  .map-sec {
+    display: grid;
+    grid-template-columns: minmax(0, 4rem) minmax(0, 1fr);
+    gap: clamp(1rem, 3vw, 3rem);
+    padding: clamp(5rem, 12vh, 9rem) clamp(1rem, 3.5vw, 3.6rem);
+    border-top: 1px solid var(--rule);
+    margin-top: clamp(4rem, 9vh, 7rem);
+  }
+  .sec-n {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--ink-faint);
+    padding-top: 0.5rem;
+  }
+  .sec-h {
+    font-family: var(--script);
+    font-size: clamp(2.6rem, 6.5vw, 5.5rem);
+    font-weight: 400;
+    line-height: 0.95;
+    margin-bottom: 1.8rem;
+  }
+  .manifesto-body {
+    max-width: 62ch;
+  }
+  /* Prose stays at a reading measure; the grid and the map run full width. */
+  .lexicon-body .lede,
+  .map-body .lede {
+    max-width: 62ch;
+  }
+  .lede {
+    font-size: clamp(1.1rem, 1.9vw, 1.6rem);
+    line-height: 1.42;
+    letter-spacing: -0.015em;
+    margin-bottom: 1.2rem;
+  }
+  .manifesto-body p + p {
+    margin-top: 1.1rem;
+  }
+  .manifesto-body p:not(.lede):not(.punch) {
+    color: var(--ink-soft);
+    font-size: 1.02rem;
+    line-height: 1.62;
+  }
+  .punch {
+    font-weight: 900;
+    font-size: clamp(1.4rem, 3vw, 2.4rem);
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    margin-top: 2rem !important;
+  }
+
+  /* ── The index ──────────────────────────────────────────────────────────*/
+  .index {
+    padding: clamp(3rem, 8vh, 6rem) clamp(1rem, 3.5vw, 3.6rem);
+    border-top: 1px solid var(--rule);
+    margin-top: clamp(4rem, 9vh, 7rem);
+  }
+  /* The row is a block, not a flex container: a flex sibling would reserve its
+     width even at opacity 0 and push the superscript onto a line of its own. */
+  .row {
+    position: relative;
+    display: block;
+    margin-left: calc(var(--off, 0) * 1vw);
+    padding: 0.14em 0;
+  }
+  .row-title {
+    display: block;
+    font-weight: 900;
+    line-height: 0.86;
+    letter-spacing: -0.042em;
+    text-transform: uppercase;
+    transition: color 0.18s ease;
+  }
+  .is-xl .row-title {
+    font-size: clamp(2.7rem, 9.4vw, 10.5rem);
+  }
+  .is-lg .row-title {
+    font-size: clamp(2.1rem, 6.6vw, 7.4rem);
+  }
+  .is-md .row-title {
+    font-size: clamp(1.6rem, 4.5vw, 5rem);
+  }
+  .row-last {
+    white-space: nowrap;
+  }
+
+  /* Nike rides the distance on the cap-height as a superscript. Ours carries
+     the issue number, and the date only turns up on hover. */
+  .row-meta {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5em;
+    margin-left: 0.35em;
+    padding: 0.18em 0.4em;
+    border-radius: 0.2em;
+    font-size: clamp(0.6rem, 1.15vw, 0.95rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    vertical-align: top;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+  .row-date {
+    opacity: 0;
+    color: var(--ink-faint);
+    font-weight: 500;
+    transition: opacity 0.18s ease, color 0.18s ease;
+  }
+  .row-tail {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    opacity: 0;
+    transform: translateY(-50%) translateX(-10px);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--ink-faint);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .row-arrow {
+    font-size: 1.1rem;
+    letter-spacing: 0;
+  }
+
+  .row:hover .row-title,
+  .row:focus-visible .row-title {
+    color: var(--c);
+  }
+  .row:hover .row-date,
+  .row:focus-visible .row-date {
+    opacity: 1;
+  }
+  .row:hover .row-tail,
+  .row:focus-visible .row-tail {
+    opacity: 1;
+    transform: translateY(-50%);
+  }
+
+  /* Aqua fails on paper. Those issues keep ink type and take the colour as a
+     chip behind the metadata instead — the token still gets its turn. */
+  .row.is-aqua:hover .row-title,
+  .row.is-aqua:focus-visible .row-title {
+    color: var(--ink);
+  }
+  .row.is-aqua:hover .row-meta,
+  .row.is-aqua:focus-visible .row-meta {
+    background: var(--c);
+    color: var(--ink);
+  }
+  .row.is-aqua:hover .row-date {
+    color: var(--ink-soft);
+  }
+
+  .row.is-next {
+    color: var(--ink-faint);
+    margin-left: 0;
+    pointer-events: none;
+  }
+  .row.is-next .row-title {
+    font-size: clamp(1.6rem, 4.5vw, 5rem);
+    color: var(--ink-faint);
+  }
+  .row.is-next .row-meta {
+    color: var(--ink-faint);
+  }
+  .row.is-next .row-date {
+    opacity: 1;
+  }
+
+  /* ── Photography bands inside the list ──────────────────────────────────*/
+  .band {
+    margin: clamp(3rem, 7vh, 6rem) 0;
+  }
+  .band-img {
+    height: clamp(15rem, 42vh, 27rem);
+  }
+  .band-cap {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    padding-top: 0.9rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .band-title {
+    color: var(--ink);
+  }
+  .band-script {
+    font-family: var(--script);
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink-soft);
+  }
+
+  /* ── Lexicon ────────────────────────────────────────────────────────────*/
+  .lex-grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-top: 2rem;
+  }
+  .lex {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.5rem 1.3rem;
+    background: var(--paper);
+  }
+  .lex-term {
+    font-weight: 700;
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    letter-spacing: -0.02em;
+  }
+  .lex-issue {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+  }
+
+  /* ── The table map ──────────────────────────────────────────────────────*/
+  .map {
+    position: relative;
+    margin-top: 3rem;
+    aspect-ratio: 16 / 9;
+    min-height: 24rem;
+  }
+  .map-table {
+    position: absolute;
+    inset: 12% 6%;
+    border-radius: 50%;
+    background:
+      repeating-linear-gradient(
+        97deg,
+        rgba(83, 69, 48, 0.045) 0 2px,
+        transparent 2px 12px
+      ),
+      radial-gradient(60% 60% at 50% 42%, var(--paper-deep) 0%, var(--paper-deeper) 100%);
+    border: 1px solid var(--rule);
+  }
+  .map-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+    text-align: center;
+  }
+  .map-center-main {
+    font-family: var(--script);
+    font-size: clamp(2rem, 4.5vw, 3.4rem);
+    color: var(--ink-soft);
+    line-height: 1;
+  }
+  .map-center-sub {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    color: var(--ink-faint);
+  }
+  .spot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: grid;
+    justify-items: center;
+    gap: 0.3rem;
+    padding: 0.55rem;
+  }
+  .spot-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 1px solid var(--ink-soft);
+    background: var(--paper);
+    transition: background 0.18s ease, border-color 0.18s ease,
+      transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .spot-n {
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    transition: color 0.18s ease;
+  }
+  .spot-title {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.28rem 0.6rem;
+    border-radius: 999px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  .spot-right .spot-title {
+    left: calc(100% + 0.5rem);
+  }
+  .spot-left .spot-title {
+    right: calc(100% + 0.5rem);
+  }
+  .spot:hover .spot-dot,
+  .spot:focus-visible .spot-dot {
+    background: var(--c);
+    border-color: var(--c);
+    transform: scale(1.5);
+    box-shadow: 0 0 0 5px rgba(36, 29, 19, 0.08);
+  }
+  .spot:hover .spot-n,
+  .spot:focus-visible .spot-n {
+    color: var(--ink);
+  }
+  .spot:hover .spot-title,
+  .spot:focus-visible .spot-title {
+    opacity: 1;
+  }
+
+  /* ── Footer ─────────────────────────────────────────────────────────────*/
+  .foot {
+    margin-top: clamp(5rem, 12vh, 9rem);
+    border-top: 1px solid var(--rule);
+    overflow: hidden;
+  }
+  .foot-marquee {
+    padding: clamp(2.5rem, 6vh, 4.5rem) 0;
+    overflow: hidden;
+  }
+  .foot-track {
+    display: flex;
+    width: max-content;
+    white-space: nowrap;
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+  }
+  .foot-track-a {
+    font-size: clamp(2.6rem, 9vw, 8.5rem);
+    color: var(--ink);
+  }
+  .foot-track-b {
+    font-size: clamp(1.4rem, 4.4vw, 4rem);
+    color: var(--ink-faint);
+  }
+
+  .foot-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    padding: clamp(2.5rem, 6vh, 4rem) clamp(1rem, 3.5vw, 3.6rem)
+      clamp(3rem, 8vh, 5rem);
+    border-top: 1px solid var(--rule);
+  }
+  .foot-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 1.2rem;
+  }
+  .foot-index ul {
+    list-style: none;
+    columns: 2;
+    column-gap: 2.5rem;
+  }
+  .foot-index li {
+    break-inside: avoid;
+  }
+  .foot-index a {
+    display: flex;
+    gap: 0.7rem;
+    padding: 0.3rem 0;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    transition: color 0.15s ease;
+  }
+  .foot-index a:hover {
+    color: var(--ink);
+  }
+  .fi-n {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+  }
+  .foot-pitch {
+    font-size: 1.05rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-bottom: 1.8rem;
+    max-width: 34ch;
+  }
+  .foot-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.95rem 1.6rem;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    transition: background 0.2s ease;
+  }
+  .foot-btn:hover {
+    background: var(--pink);
+  }
+  .foot-fine {
+    margin-top: 2rem;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+  }
+  .foot-script {
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+  .foot-script-l {
+    font-family: var(--script);
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+  }
+
+  /* ── Motion ─────────────────────────────────────────────────────────────
+     Hiding is gated behind no-preference, so reduced-motion users get the
+     finished state rather than a page of invisible elements. */
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      opacity: 0;
+      transform: translateY(2.5rem);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.in {
+      opacity: 1;
+      transform: none;
+    }
+    .hero-marquee-track {
+      animation: slide-l 38s linear infinite;
+    }
+    .foot-track-a {
+      animation: slide-l 26s linear infinite;
+    }
+    .foot-track-b {
+      animation: slide-r 32s linear infinite;
+    }
+  }
+  @keyframes slide-l {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes slide-r {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  /* ── Responsive ─────────────────────────────────────────────────────────*/
+  @media (max-width: 820px) {
+    .manifesto,
+    .lexicon,
+    .map-sec {
+      grid-template-columns: 1fr;
+      gap: 0.8rem;
+    }
+    .foot-body {
+      grid-template-columns: 1fr;
+    }
+    .hero-foot {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.7rem;
+    }
+    .hero-rule {
+      display: none;
+    }
+    .row {
+      margin-left: 0;
+    }
+    .row-tail {
+      display: none;
+    }
+    .row-date {
+      display: none;
+    }
+    .map {
+      aspect-ratio: 3 / 4;
+    }
+    .map-table {
+      inset: 6% 10%;
+    }
+    .spot-title {
+      display: none;
+    }
+    .foot-index ul {
+      columns: 1;
+    }
+  }
+</style>
+
+<script>
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Staggered reveal. Delay is assigned per intersecting batch so a fast scroll
+  // never leaves a row waiting on a queue built for a slow one.
+  const revealables = document.querySelectorAll<HTMLElement>(".reveal");
+  if (reduced || !("IntersectionObserver" in window)) {
+    revealables.forEach((el) => el.classList.add("in"));
+  } else {
+    const io = new IntersectionObserver(
+      (entries) => {
+        let n = 0;
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const el = entry.target as HTMLElement;
+          el.style.transitionDelay = `${n * 70}ms`;
+          el.classList.add("in");
+          io.unobserve(el);
+          n++;
+        }
+      },
+      { rootMargin: "0px 0px -12% 0px", threshold: 0.08 },
+    );
+    revealables.forEach((el) => io.observe(el));
+  }
+
+  // Nav state + hero parallax, both off one rAF-throttled scroll listener.
+  const nav = document.getElementById("nav");
+  const parallax = document.querySelector<HTMLElement>("[data-parallax]");
+  let ticking = false;
+
+  const onScroll = () => {
+    const y = window.scrollY;
+    nav?.classList.toggle("scrolled", y > 40);
+    if (parallax && !reduced) {
+      parallax.style.transform = `translate3d(0, ${(y * -0.12).toFixed(2)}px, 0)`;
+    }
+    ticking = false;
+  };
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(onScroll);
+    },
+    { passive: true },
+  );
+  onScroll();
+</script>

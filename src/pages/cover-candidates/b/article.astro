@@ -1,0 +1,452 @@
+---
+// Direction B — "El Semanario". Article page: maximal readability, print feature opener.
+import BLayout from "../../../components/candidates/b/BLayout.astro";
+import CandidateBar from "../../../components/CandidateBar.astro";
+import article from "../../../data/article.json";
+
+const MESES = [
+  "ENE", "FEB", "MAR", "ABR", "MAY", "JUN",
+  "JUL", "AGO", "SEP", "OCT", "NOV", "DIC",
+];
+const fmt = (iso: string) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${d} ${MESES[m - 1]} ${y}`;
+};
+
+// The pull quote is lifted into the layout before the section it belongs to.
+const PULL_BEFORE = 2;
+---
+
+<BLayout title={`${article.number} — ${article.title} · Design Sobremesa`}>
+  <div class="page" style={`--spot:${article.colorHex}`}>
+    <nav class="topline" aria-label="Volver">
+      <a href="/cover-candidates/b/" class="home">
+        <span class="home-grot">SOBREMESA</span><span class="home-scr">london</span>
+      </a>
+      <a href="/cover-candidates/b/" class="back">← Índice</a>
+    </nav>
+
+    <article>
+      <header class="opener">
+        <p class="numeral" aria-label={`Número ${article.number}`}>{article.number}</p>
+        <h1 class="title">{article.title}</h1>
+        <p class="standfirst">{article.standfirst}</p>
+        <div class="opener-folio">
+          <time datetime={article.date}>{fmt(article.date)}</time>
+          <span class="dot" aria-hidden="true">·</span>
+          <span>Nº {article.number}</span>
+          {
+            article.callbacks.length > 0 && (
+              <>
+                <span class="dot" aria-hidden="true">·</span>
+                <span class="threads" title={`Este número conversa con ${article.callbacks.join(", ")}`}>
+                  <span class="arrow" aria-hidden="true">→</span>
+                  {article.callbacks.join(" · ")}
+                </span>
+              </>
+            )
+          }
+        </div>
+      </header>
+
+      {
+        article.sections.map((section, i) => (
+          <>
+            {i === PULL_BEFORE && (
+              <aside class="pull" aria-label="Cita destacada">
+                <p>“{article.pullQuote}”</p>
+              </aside>
+            )}
+            <section class="sec">
+              <span class="kind" aria-hidden="true">{section.kind}</span>
+              <h2>{section.heading}</h2>
+              <div class="prose" set:html={section.html} />
+            </section>
+          </>
+        ))
+      }
+
+      <footer class="cierre">
+        <p class="closer">{article.closer}</p>
+        <p class="endmark" aria-hidden="true">■</p>
+      </footer>
+    </article>
+
+    <footer class="foot">
+      <p>
+        <span class="foot-grot">SOBREMESA</span>
+        <span class="foot-scr">london</span>
+        <span class="foot-dot" aria-hidden="true">·</span>
+        DESDE 2026
+        <span class="foot-dot" aria-hidden="true">·</span>
+        MÁS SOON
+      </p>
+    </footer>
+  </div>
+
+  <CandidateBar current="b" page="article" />
+</BLayout>
+
+<style>
+  .page {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: clamp(1.6rem, 5vh, 3rem) 1.25rem 7rem;
+  }
+
+  /* ---------- Topline ---------- */
+
+  .topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0.7rem;
+    margin-bottom: clamp(2.4rem, 7vh, 4.2rem);
+  }
+
+  .home {
+    text-decoration: none;
+  }
+
+  .home-grot {
+    font-family: var(--grotesque);
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.24em;
+    color: var(--ink);
+  }
+
+  .home-scr {
+    font-family: var(--script);
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    margin-left: 0.12em;
+  }
+
+  .back {
+    font-family: var(--grotesque);
+    font-weight: 500;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .back:hover {
+    color: var(--spot);
+  }
+
+  /* ---------- Opener: print feature opener, numeral leads ---------- */
+
+  .opener {
+    text-align: center;
+    margin-bottom: clamp(3rem, 8vh, 4.6rem);
+  }
+
+  .numeral {
+    font-family: var(--grotesque);
+    font-weight: 700;
+    font-size: clamp(4.4rem, 16vw, 7.5rem);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums;
+    color: var(--spot);
+    text-shadow: 0.045em 0.045em 0 var(--ink);
+    margin-bottom: 1.4rem;
+  }
+
+  .title {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(2.1rem, 7vw, 3.3rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-wrap: balance;
+    max-width: 16em;
+    margin: 0 auto 1.3rem;
+  }
+
+  .standfirst {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(1.15rem, 3.4vw, 1.35rem);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 31em;
+    margin: 0 auto 1.8rem;
+    text-wrap: pretty;
+  }
+
+  .opener-folio {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    column-gap: 0.6rem;
+    row-gap: 0.3rem;
+    border-top: 1px solid var(--rule-strong);
+    border-bottom: 2px solid var(--rule-strong);
+    padding: 0.5rem 1.4rem 0.55rem;
+    font-family: var(--grotesque);
+    font-weight: 500;
+    font-size: 0.6875rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dot {
+    color: var(--rule);
+  }
+
+  .threads .arrow {
+    color: var(--spot);
+    text-shadow: 0.06em 0.06em 0 var(--ink);
+    font-weight: 700;
+    margin-right: 0.2em;
+  }
+
+  /* ---------- Sections ---------- */
+
+  .sec {
+    position: relative;
+    max-width: 34rem; /* ~66ch at this size */
+    margin: 0 auto 3.1rem;
+  }
+
+  .kind {
+    display: block;
+    font-family: var(--grotesque);
+    font-weight: 700;
+    font-size: 0.625rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 0.55rem;
+  }
+
+  .sec h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.45rem;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+    margin-bottom: 1.1rem;
+    text-wrap: balance;
+  }
+
+  /* On wide viewports the kind label hangs in the left margin */
+  @media (min-width: 68rem) {
+    .kind {
+      position: absolute;
+      right: calc(100% + 2.6rem);
+      top: 0.45rem;
+      width: 8rem;
+      text-align: right;
+      margin-bottom: 0;
+    }
+  }
+
+  /* ---------- Pull quote ---------- */
+
+  .pull {
+    max-width: 36rem;
+    margin: 3.4rem auto 3.4rem;
+    padding: 1.7rem 0.5rem 1.9rem;
+    border-top: 1px solid var(--rule-strong);
+    border-bottom: 2px solid var(--rule-strong);
+    text-align: center;
+  }
+
+  .pull p {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(1.4rem, 4.4vw, 1.8rem);
+    line-height: 1.35;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+
+  /* ---------- El cierre ---------- */
+
+  .cierre {
+    max-width: 34rem;
+    margin: 4rem auto 0;
+    padding-top: 2.2rem;
+    border-top: 1px solid var(--rule-strong);
+    text-align: center;
+  }
+
+  .closer {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.3rem;
+    line-height: 1.5;
+    color: var(--ink);
+    text-wrap: pretty;
+  }
+
+  .endmark {
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    line-height: 1;
+    color: var(--spot);
+    text-shadow: 2px 2px 0 var(--ink);
+  }
+
+  /* ---------- Footer ---------- */
+
+  .foot {
+    margin-top: 3.4rem;
+    text-align: center;
+    font-family: var(--grotesque);
+    font-weight: 500;
+    font-size: 0.66rem;
+    letter-spacing: 0.22em;
+    color: var(--ink-faint);
+  }
+
+  .foot-grot {
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+
+  .foot-scr {
+    font-family: var(--script);
+    font-size: 1rem;
+    letter-spacing: 0;
+    color: var(--ink-soft);
+    margin-left: 0.1em;
+  }
+
+  .foot-dot {
+    color: var(--rule);
+    margin: 0 0.3rem;
+  }
+</style>
+
+<style is:global>
+  /* ---------- Typesetting of the article html (set:html content) ---------- */
+
+  .prose {
+    font-family: var(--serif);
+    font-size: 1.125rem;
+    line-height: 1.68;
+    color: var(--ink);
+  }
+
+  .prose p {
+    margin-bottom: 1.35em;
+    text-wrap: pretty;
+  }
+
+  .prose p:last-child {
+    margin-bottom: 0;
+  }
+
+  .prose a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--spot);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+    transition: color 0.15s ease;
+  }
+
+  .prose a:hover {
+    color: var(--spot);
+  }
+
+  .prose strong {
+    font-weight: 600;
+  }
+
+  /* Ordered list: the ladder — Geist numerals in the issue fluorescent */
+  .prose ol {
+    list-style: none;
+    counter-reset: ladder;
+    margin: 0 0 1.35em;
+    padding: 0;
+  }
+
+  .prose ol li {
+    counter-increment: ladder;
+    position: relative;
+    padding-left: 2.4rem;
+    margin-bottom: 0.85em;
+  }
+
+  .prose ol li::before {
+    content: counter(ladder);
+    position: absolute;
+    left: 0;
+    top: 0.08em;
+    font-family: var(--grotesque);
+    font-weight: 700;
+    font-size: 1.05rem;
+    line-height: 1.35;
+    font-variant-numeric: tabular-nums;
+    color: var(--spot);
+    text-shadow: 0.06em 0.06em 0 var(--ink);
+  }
+
+  /* Blockquote: hairline rule, italic, hung slightly */
+  .prose blockquote {
+    margin: 1.6em 0;
+    padding: 0.15em 0 0.15em 1.4rem;
+    border-left: 2px solid var(--spot);
+  }
+
+  .prose blockquote p {
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    margin-bottom: 0.8em;
+  }
+
+  .prose blockquote p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Media placeholders from the published issue — set at the cover ratio */
+  .prose figure[data-placeholder] {
+    margin: 1.9em 0;
+    aspect-ratio: 1.81 / 1;
+    display: grid;
+    place-items: center;
+    background: var(--paper-deep);
+    border: 1px solid var(--rule);
+    position: relative;
+  }
+
+  .prose figure[data-placeholder]::before {
+    content: attr(data-placeholder);
+    font-family: var(--grotesque);
+    font-weight: 500;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: center;
+    padding: 0 1rem;
+  }
+
+  .prose figure[data-placeholder]::after {
+    content: "FIG · 1.81:1";
+    position: absolute;
+    bottom: 0.55rem;
+    right: 0.7rem;
+    font-family: var(--grotesque);
+    font-weight: 500;
+    font-size: 0.56rem;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

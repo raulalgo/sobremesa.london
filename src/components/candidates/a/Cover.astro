@@ -1,0 +1,129 @@
+---
+/**
+ * Direction A — code-drawn cover.
+ * 1.81:1 cinemascope tile: crushed-black ground with per-issue variation,
+ * issue numeral dead-centre in Geist Bold in the issue's fluorescent,
+ * "sobremesa" Kapakana lockup orbiting on a cardinal (never a corner).
+ */
+interface Props {
+  number: string;
+  colorHex: string;
+  cardinal?: "bottom" | "top" | "right" | "left";
+  seed?: number;
+  hero?: boolean;
+}
+const {
+  number,
+  colorHex,
+  cardinal = "bottom",
+  seed = 0,
+  hero = false,
+} = Astro.props;
+
+// Deterministic ground variation per issue — position of the umber glow
+// and the angle of the base wash. Subtle: gradients + vignette only.
+const gx = 22 + ((seed * 37) % 56); // 22–77 %
+const gy = 8 + ((seed * 53) % 48); // 8–55 %
+const ang = 138 + ((seed * 29) % 52); // 138–189 deg
+---
+
+<div
+  class:list={["cover", `card-${cardinal}`, { hero }]}
+  style={`--c:${colorHex}; --gx:${gx}%; --gy:${gy}%; --ang:${ang}deg;`}
+  aria-hidden="true"
+>
+  <span class="ground"></span>
+  <span class="numeral">{number}</span>
+  <span class="lockup">sobremesa</span>
+</div>
+
+<style>
+  .cover {
+    position: relative;
+    aspect-ratio: 1.81 / 1;
+    container-type: inline-size;
+    overflow: hidden;
+    border-radius: 4px;
+    isolation: isolate;
+    background:
+      radial-gradient(
+        120% 150% at var(--gx) var(--gy),
+        rgba(83, 69, 48, 0.3),
+        transparent 55%
+      ),
+      radial-gradient(
+        95% 130% at 50% 112%,
+        color-mix(in srgb, var(--c) 9%, transparent),
+        transparent 62%
+      ),
+      linear-gradient(var(--ang), #0c0405, #050302 62%);
+  }
+  /* vignette — cinema edges */
+  .cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 14cqw 2cqw rgba(2, 1, 0, 0.55);
+  }
+  .ground {
+    position: absolute;
+    inset: 0;
+    /* one small, rare specular highlight */
+    background: radial-gradient(
+      3.5cqw 2cqw at calc(100% - var(--gx)) calc(18% + var(--gy) / 3),
+      rgba(211, 201, 188, 0.14),
+      transparent 70%
+    );
+  }
+  .numeral {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: "Geist", system-ui, sans-serif;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 33cqw;
+    line-height: 1;
+    letter-spacing: 0.005em;
+    color: var(--c);
+    mix-blend-mode: plus-lighter;
+    text-shadow: 0 0 7cqw color-mix(in srgb, var(--c) 40%, transparent);
+  }
+  .lockup {
+    position: absolute;
+    font-family: "Kapakana", cursive;
+    font-weight: 400;
+    font-size: 9.5cqw;
+    line-height: 1;
+    color: var(--c);
+    mix-blend-mode: hard-light;
+    opacity: 0.95;
+    white-space: nowrap;
+  }
+  /* cardinals — never a corner */
+  .card-bottom .lockup {
+    left: 50%;
+    bottom: 5cqw;
+    transform: translateX(-50%);
+  }
+  .card-top .lockup {
+    left: 50%;
+    top: 5cqw;
+    transform: translateX(-50%);
+  }
+  .card-right .lockup {
+    top: 50%;
+    right: 4cqw;
+    transform: translate(50%, -50%) rotate(90deg);
+  }
+  .card-left .lockup {
+    top: 50%;
+    left: 4cqw;
+    transform: translate(-50%, -50%) rotate(-90deg);
+  }
+  .hero .numeral {
+    text-shadow: 0 0 9cqw color-mix(in srgb, var(--c) 55%, transparent);
+  }
+</style>

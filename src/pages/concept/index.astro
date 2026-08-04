@@ -1,0 +1,76 @@
+---
+import { Image } from "astro:assets";
+import Layout from "../../layouts/Layout.astro";
+import cover from "../../assets/cover.png";
+---
+
+<Layout>
+  <main class="scene relative grid min-h-svh w-full place-items-center overflow-hidden">
+    <!-- Full-bleed cover image -->
+    <Image
+      src={cover}
+      alt="Mesa de sobremesa en un comedor londinense"
+      class="scene-photo pointer-events-none absolute inset-0 h-full w-full select-none object-cover object-center"
+      widths={[768, 1280, 1920, 2560]}
+      sizes="100vw"
+      quality={82}
+      loading="eager"
+      fetchpriority="high"
+    />
+
+    <!--
+      Radial white glow. This is the ONLY layer that blends with the photo:
+      hard-light + 70% opacity brightens the busy scene behind the wordmark,
+      exactly like the Figma group's fill — but it never touches the text.
+    -->
+    <div
+      class="scene-glow pointer-events-none absolute top-1/2 left-1/2 h-[75vmin] w-[90vmin] max-w-[1100px] opacity-70 mix-blend-hard-light"
+      style="background: radial-gradient(circle at 50% 50%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.92) 16%, rgba(255,255,255,0) 60%);"
+    >
+    </div>
+
+    <!--
+      Brand text sits on top as a solid, full-opacity layer with a normal
+      blend, so the pink stays vivid and readable across the whole photo.
+    -->
+    <div
+      class="scene-tilt relative z-10 flex flex-col items-center justify-center gap-5 p-3 text-center text-pink sm:gap-9"
+    >
+      <p
+        class="scene-plane text-sm font-bold tracking-[0.04em] uppercase whitespace-nowrap sm:text-2xl"
+        style="--depth: -48px; --depth-scale: 1.048"
+      >
+        desde 2026
+      </p>
+
+      <!--
+        Isolated group: `plus-lighter` blends the two words against each other
+        (and transparency), so where "london"'s strokes cross "SOBREMESA" the
+        pinks add into a brighter highlight — the Figma overlay effect. Because
+        the group is isolated, this never blends with the photo, keeping contrast.
+      -->
+      <div
+        class="scene-plane isolate flex flex-col items-center leading-none"
+        style="--depth: 24px; --depth-scale: 0.976"
+        aria-label="Sobremesa London"
+      >
+        <span class="text-[42px] font-bold tracking-[0.01em] mix-blend-plus-lighter sm:text-[68px]">SOBREMESA</span>
+        <span
+          class="scene-float -mt-[0.28em] font-script text-[64px] leading-[0.8] mix-blend-plus-lighter sm:text-[112px]"
+          style="--float: 8px">london</span
+        >
+      </div>
+
+      <p
+        class="scene-plane text-sm font-bold tracking-[0.04em] uppercase whitespace-nowrap sm:text-2xl"
+        style="--depth: -32px; --depth-scale: 1.032"
+      >
+        más soon
+      </p>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import "../../scripts/scene-rig";
+</script>
