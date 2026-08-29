@@ -2,6 +2,7 @@
 import { getImage } from "astro:assets";
 import { getCollection } from "astro:content";
 import { bindingFor } from "../../data/bindings";
+import { DEFAULTS } from "../../scripts/reel-tuning";
 
 /**
  * Issue reel — Figma nodes 52:194 / 53:269 / 53:324.
@@ -74,7 +75,12 @@ const issues = await Promise.all(
 );
 ---
 
-<div class="reel" data-reel>
+{/*
+  --step is the gearing: px of scroll per issue. Rendered from the same
+  DEFAULTS the script reads, so the spacers are the right height on the first
+  frame; reel.ts rewrites it whenever the tuner moves the slider.
+*/}
+<div class="reel" data-reel style={`--step:${DEFAULTS.travel}`}>
   <!--
     Everything that paints lives inside this stage: it is the stacking context
     the titles blend against. Nothing between the covers and the rows may
@@ -135,8 +141,10 @@ const issues = await Promise.all(
   </div>
 
   {/*
-    Scroll driver: one viewport-tall snap target per issue. These are the only
-    snap targets on the page, and they are static, so 029 always lands at 0.
+    Scroll driver: one --step-tall spacer per issue. These are the only snap
+    targets on the page, and they are static, so 029 always lands at 0. The
+    magnet is off by default — it truncates a flick just as the momentum gets
+    interesting — but the alignment stays for the modes that switch it on.
   */}
   {issues.map((issue) => <section class="snap" aria-hidden="true" data-snap={issue.number} />)}
 </div>
@@ -159,6 +167,15 @@ const issues = await Promise.all(
     --anchor: calc(100svh - var(--row-h) - 0.204 * var(--u));
 
     --p: 0; /* scroll position, in issues */
+    --step: 120; /* px of scroll per issue — the inline style is the real one */
+
+    /*
+      The spacers stop at the top of the last issue, but scrolling *to* it
+      needs a viewport of room underneath. At the old gearing the spacer was
+      that viewport, so this was zero; at 120px it is the missing 780, and
+      without it the archive simply ends six issues early.
+    */
+    padding-bottom: max(0px, calc(100svh - var(--step) * 1px));
   }
 
   /*
@@ -279,101 +296,14 @@ const issues = await Promise.all(
   }
 
   .snap {
-    height: 100svh;
+    height: calc(var(--step) * 1px);
     scroll-snap-align: start;
   }
 </style>
 
 <script>
+  import { mountReel } from "../../scripts/reel";
+
   const reel = document.querySelector<HTMLElement>("[data-reel]");
-
-  if (reel) {
-    const bgs = [...reel.querySelectorAll<HTMLElement>("[data-bg]")];
-    const rows = [...reel.querySelectorAll<HTMLElement>("[data-row]")];
-    const last = rows.length - 1;
-
-    const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
-
-    /**
-     * Holds the outgoing cover until a third of the way through the travel,
-     * then swaps over quickly. A straight linear fade parks both photos at 50%
-     * across the middle of the scroll and reads as a muddy double exposure.
-     */
-    function ease(t: number) {
-      const x = clamp01((t - 0.32) / 0.42);
-      return x * x * (3 - 2 * x);
-    }
-
-    let queued = false;
-
-    function render() {
-      queued = false;
-
-      // Scroll progress expressed in issues: 0 = 029 snapped, 1 = 028, 2 = 027.
-      const p = Math.min(last, Math.max(0, window.scrollY / window.innerHeight));
-      reel!.style.setProperty("--p", String(p));
-
-      rows.forEach((row, i) => {
-        const distance = Math.abs(p - i);
-        const live = clamp01(1 - distance);
-        // Rows more than one step away dim to the 40% white of canvas 3, then
-        // keep fading out. The canvases only ever stacked three issues; across
-        // thirty, a floor of 45% turns the screen into a wall of type.
-        const falloff = (1 - 0.55 * clamp01(distance - 1)) * (1 - clamp01((distance - 2) / 4));
-
-        row.style.setProperty("--live", live.toFixed(4));
-        row.style.setProperty("--idle", ((1 - live) * falloff).toFixed(4));
-      });
-
-      // Each cover fades in *over* the previous one, which stays opaque
-      // underneath — a straight two-way crossfade washes out at the midpoint.
-      bgs.forEach((bg, i) => {
-        bg.style.opacity = i === 0 ? "1" : ease(clamp01(p - i + 1)).toFixed(4);
-      });
-
-      mountNear(p);
-    }
-
-    /**
-     * Give the browser the covers it is about to need — the current issue plus
-     * two either side — and nothing else. Attributes are set once; the image
-     * stays in the document afterwards so scrolling back is instant.
-     */
-    function mountNear(p: number) {
-      const centre = Math.round(p);
-      for (let i = Math.max(0, centre - 2); i <= Math.min(last, centre + 2); i++) {
-        const img = bgs[i].querySelector("img");
-        if (!img || img.src) continue;
-        if (img.dataset.srcset) img.srcset = img.dataset.srcset;
-        img.src = img.dataset.src!;
-      }
-    }
-
-    function onScroll() {
-      if (!queued) {
-        queued = true;
-        requestAnimationFrame(render);
-      }
-    }
-
-    addEventListener("scroll", onScroll, { passive: true });
-    addEventListener("resize", render);
-
-    // Deep link: /#028 opens with that issue already snapped.
-    const target = rows.findIndex(
-      (row) => row.dataset.number === location.hash.slice(1),
-    );
-    if (target > 0) {
-      scrollTo({ top: target * window.innerHeight, behavior: "instant" });
-    }
-
-    // Clicking a title snaps to it.
-    rows.forEach((row, i) => {
-      row.addEventListener("click", () => {
-        scrollTo({ top: i * window.innerHeight, behavior: "smooth" });
-      });
-    });
-
-    render();
-  }
+  if (reel) mountReel(reel);
 </script>

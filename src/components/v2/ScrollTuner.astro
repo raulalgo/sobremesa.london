@@ -1,0 +1,447 @@
+---
+import { DEFAULTS, PRESETS, SPECS } from "../../scripts/reel-tuning";
+
+/**
+ * The scroll tuner — a design tool, not part of the page.
+ *
+ * It only mounts when the URL asks for it (/?tune), so the reel ships without
+ * it. Values persist in localStorage; "Copiar" prints a DEFAULTS block ready to
+ * paste over the one in src/scripts/reel-tuning.ts once a setting feels right.
+ *
+ * The controls are rendered here rather than built in the browser: Astro scopes
+ * these styles by attribute, and an element created with createElement never
+ * gets that attribute.
+ */
+
+const groups = [...new Set(SPECS.map((s) => s.group))].map((name) => ({
+  name,
+  specs: SPECS.filter((s) => s.group === name),
+}));
+---
+
+<div class="tuner" data-tuner hidden>
+  <header>
+    <button type="button" data-fold aria-expanded="true">
+      <span class="dot"></span>
+      <strong>Scroll</strong>
+    </button>
+    <span class="fps" data-fps>— fps</span>
+  </header>
+
+  <div class="body">
+    <div class="presets">
+      {
+        Object.keys(PRESETS).map((name) => (
+          <button type="button" data-preset={name}>
+            {name}
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="fields">
+      {
+        groups.map((group) => (
+          <>
+            <p class="group">{group.name}</p>
+            {group.specs.map((spec) => (
+              <div class="field">
+                {spec.kind === "toggle" ? (
+                  <label class="switch">
+                    <input type="checkbox" data-key={spec.key} checked={DEFAULTS[spec.key] as boolean} />
+                    <span>{spec.label}</span>
+                  </label>
+                ) : spec.kind === "select" ? (
+                  <>
+                    <span class="top">
+                      <label for={`t-${spec.key}`}>{spec.label}</label>
+                    </span>
+                    <select id={`t-${spec.key}`} data-key={spec.key}>
+                      {spec.options.map((option) => (
+                        <option value={option} selected={DEFAULTS[spec.key] === option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                ) : (
+                  <>
+                    <span class="top">
+                      <label for={`t-${spec.key}`}>{spec.label}</label>
+                      <output data-out={spec.key}>{(DEFAULTS[spec.key] as number).toFixed(2)}</output>
+                    </span>
+                    <input
+                      id={`t-${spec.key}`}
+                      type="range"
+                      data-key={spec.key}
+                      min={spec.min}
+                      max={spec.max}
+                      step={spec.step}
+                      value={DEFAULTS[spec.key] as number}
+                    />
+                  </>
+                )}
+                {spec.hint && <span class="hint">{spec.hint}</span>}
+              </div>
+            ))}
+          </>
+        ))
+      }
+    </div>
+
+    <footer>
+      <button type="button" data-copy>Copiar valores</button>
+      <button type="button" data-reset>Reiniciar</button>
+    </footer>
+  </div>
+</div>
+
+<style>
+  .tuner {
+    position: fixed;
+    z-index: 100;
+    right: 16px;
+    bottom: 16px;
+    width: 268px;
+    max-height: calc(100svh - 32px);
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgb(255 255 255 / 0.14);
+    border-radius: 10px;
+    background: rgb(10 10 10 / 0.82);
+    backdrop-filter: blur(18px) saturate(1.4);
+    color: #fff;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    line-height: 1.35;
+    box-shadow: 0 18px 50px rgb(0 0 0 / 0.55);
+    /* The reel takes a click anywhere as "snap to that issue" — do not let a
+       drag that started on a slider count as one. */
+    user-select: none;
+  }
+
+  .tuner[hidden] {
+    display: none;
+  }
+
+  header {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  }
+
+  header button {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #7cf59b;
+  }
+
+  .fps {
+    color: rgb(255 255 255 / 0.4);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .body {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .tuner[data-folded] .body {
+    display: none;
+  }
+
+  .presets {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  }
+
+  .presets button {
+    padding: 3px 8px;
+    border: 1px solid rgb(255 255 255 / 0.18);
+    border-radius: 99px;
+    background: none;
+    color: rgb(255 255 255 / 0.75);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .presets button:hover {
+    border-color: rgb(255 255 255 / 0.55);
+    color: #fff;
+  }
+
+  .fields {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 2px 10px 10px;
+  }
+
+  .group {
+    margin: 11px 0 0;
+    color: rgb(255 255 255 / 0.35);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .field {
+    margin-top: 8px;
+  }
+
+  .top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .field label {
+    color: rgb(255 255 255 / 0.88);
+  }
+
+  .field output {
+    color: #7cf59b;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hint {
+    display: block;
+    margin-top: 2px;
+    color: rgb(255 255 255 / 0.32);
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .field input[type="range"] {
+    display: block;
+    width: 100%;
+    height: 14px;
+    margin: 3px 0 0;
+    appearance: none;
+    background: none;
+    cursor: ew-resize;
+  }
+
+  .field input[type="range"]::-webkit-slider-runnable-track {
+    height: 2px;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 0.22);
+  }
+
+  .field input[type="range"]::-webkit-slider-thumb {
+    width: 10px;
+    height: 10px;
+    margin-top: -4px;
+    appearance: none;
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  .field input[type="range"]::-moz-range-track {
+    height: 2px;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 0.22);
+  }
+
+  .field input[type="range"]::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  select {
+    width: 100%;
+    margin-top: 3px;
+    padding: 3px 5px;
+    border: 1px solid rgb(255 255 255 / 0.18);
+    border-radius: 4px;
+    background: #111;
+    color: #fff;
+    font: inherit;
+  }
+
+  .switch {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+  }
+
+  .switch input {
+    width: 13px;
+    height: 13px;
+    flex: none;
+    margin: 0;
+    accent-color: #7cf59b;
+  }
+
+  footer {
+    display: flex;
+    flex: none;
+    gap: 6px;
+    padding: 10px;
+    border-top: 1px solid rgb(255 255 255 / 0.1);
+  }
+
+  footer button {
+    flex: 1;
+    padding: 5px;
+    border: 1px solid rgb(255 255 255 / 0.18);
+    border-radius: 5px;
+    background: none;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  footer button:hover {
+    background: rgb(255 255 255 / 0.1);
+  }
+
+  @media (max-width: 700px) {
+    .tuner {
+      right: 8px;
+      bottom: 8px;
+      left: 8px;
+      width: auto;
+      max-height: 56svh;
+    }
+  }
+</style>
+
+<script>
+  import {
+    DEFAULTS,
+    PRESETS,
+    SPECS,
+    onTuning,
+    resetTuning,
+    setTuning,
+    tunerRequested,
+    tuning,
+    type Tuning,
+  } from "../../scripts/reel-tuning";
+
+  const panel = document.querySelector<HTMLElement>("[data-tuner]");
+
+  if (panel && tunerRequested()) {
+    panel.hidden = false;
+
+    /* The reel listens across the whole viewport — for a click to snap to an
+       issue, for the wheel to step, for keys to page. None of that should fire
+       while you are working the panel. */
+    for (const type of ["click", "wheel", "keydown", "pointerdown"] as const) {
+      panel.addEventListener(type, (e) => e.stopPropagation());
+    }
+
+    const decimals = (step: number) => (step >= 1 ? 0 : 2);
+
+    for (const spec of SPECS) {
+      const input = panel.querySelector<HTMLInputElement | HTMLSelectElement>(
+        `[data-key="${spec.key}"]`,
+      );
+      if (!input) continue;
+
+      if (spec.kind === "toggle") {
+        input.addEventListener("change", () =>
+          setTuning({ [spec.key]: (input as HTMLInputElement).checked }),
+        );
+      } else if (spec.kind === "select") {
+        input.addEventListener("change", () =>
+          setTuning({ [spec.key]: input.value } as Partial<Tuning>),
+        );
+      } else {
+        input.addEventListener("input", () => setTuning({ [spec.key]: Number(input.value) }));
+      }
+    }
+
+    /* One subscription drives every control, so a preset moves the sliders too. */
+    onTuning((t) => {
+      for (const spec of SPECS) {
+        const el = panel.querySelector<HTMLInputElement | HTMLSelectElement>(
+          `[data-key="${spec.key}"]`,
+        );
+        if (!el) continue;
+
+        if (spec.kind === "toggle") {
+          (el as HTMLInputElement).checked = t[spec.key] as boolean;
+        } else {
+          el.value = String(t[spec.key]);
+          if (spec.kind === "range") {
+            const out = panel.querySelector(`[data-out="${spec.key}"]`);
+            if (out) out.textContent = (t[spec.key] as number).toFixed(decimals(spec.step));
+          }
+        }
+      }
+    });
+
+    panel.querySelectorAll<HTMLElement>("[data-preset]").forEach((button) => {
+      button.addEventListener("click", () => setTuning(PRESETS[button.dataset.preset!]));
+    });
+
+    const fold = panel.querySelector<HTMLElement>("[data-fold]")!;
+    fold.addEventListener("click", () => {
+      const folded = panel.toggleAttribute("data-folded");
+      fold.setAttribute("aria-expanded", String(!folded));
+    });
+
+    panel.querySelector<HTMLElement>("[data-reset]")!.addEventListener("click", resetTuning);
+
+    const copy = panel.querySelector<HTMLElement>("[data-copy]")!;
+    copy.addEventListener("click", async () => {
+      const t = tuning();
+      const body = (Object.keys(DEFAULTS) as (keyof Tuning)[])
+        .map((k) => `  ${k}: ${JSON.stringify(t[k])},`)
+        .join("\n");
+      const text = `export const DEFAULTS: Tuning = {\n${body}\n};`;
+      try {
+        await navigator.clipboard.writeText(text);
+        copy.textContent = "Copiado ✓";
+      } catch {
+        console.log(text);
+        copy.textContent = "En consola";
+      }
+      setTimeout(() => (copy.textContent = "Copiar valores"), 1400);
+    });
+
+    /* A frame counter, because the question the panel exists to answer is
+       whether all this smoothing still holds 60. */
+    const fps = panel.querySelector<HTMLElement>("[data-fps]")!;
+    let frames = 0;
+    let since = performance.now();
+    requestAnimationFrame(function tick(now) {
+      frames++;
+      if (now - since >= 500) {
+        fps.textContent = `${Math.round((frames * 1000) / (now - since))} fps`;
+        frames = 0;
+        since = now;
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+</script>
