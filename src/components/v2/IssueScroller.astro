@@ -2,6 +2,7 @@
 import { getImage } from "astro:assets";
 import { getCollection } from "astro:content";
 import { bindingFor } from "../../data/bindings";
+import { DEFAULTS } from "../../scripts/reel-tuning";
 
 /**
  * Issue reel — Figma nodes 52:194 / 53:269 / 53:324.
@@ -74,7 +75,12 @@ const issues = await Promise.all(
 );
 ---
 
-<div class="reel" data-reel>
+{/*
+  --step is the gearing: px of scroll per issue. Rendered from the same
+  DEFAULTS the script reads, so the spacers are the right height on the first
+  frame; reel.ts rewrites it whenever the tuner moves the slider.
+*/}
+<div class="reel" data-reel style={`--step:${DEFAULTS.travel}`}>
   <!--
     Everything that paints lives inside this stage: it is the stacking context
     the titles blend against. Nothing between the covers and the rows may
@@ -135,8 +141,10 @@ const issues = await Promise.all(
   </div>
 
   {/*
-    Scroll driver: one viewport-tall snap target per issue. These are the only
-    snap targets on the page, and they are static, so 029 always lands at 0.
+    Scroll driver: one --step-tall spacer per issue. These are the only snap
+    targets on the page, and they are static, so 029 always lands at 0. The
+    magnet is off by default — it truncates a flick just as the momentum gets
+    interesting — but the alignment stays for the modes that switch it on.
   */}
   {issues.map((issue) => <section class="snap" aria-hidden="true" data-snap={issue.number} />)}
 </div>
@@ -159,6 +167,15 @@ const issues = await Promise.all(
     --anchor: calc(100svh - var(--row-h) - 0.204 * var(--u));
 
     --p: 0; /* scroll position, in issues */
+    --step: 120; /* px of scroll per issue — the inline style is the real one */
+
+    /*
+      The spacers stop at the top of the last issue, but scrolling *to* it
+      needs a viewport of room underneath. At the old gearing the spacer was
+      that viewport, so this was zero; at 120px it is the missing 780, and
+      without it the archive simply ends six issues early.
+    */
+    padding-bottom: max(0px, calc(100svh - var(--step) * 1px));
   }
 
   /*
@@ -279,7 +296,7 @@ const issues = await Promise.all(
   }
 
   .snap {
-    height: 100svh;
+    height: calc(var(--step) * 1px);
     scroll-snap-align: start;
   }
 </style>

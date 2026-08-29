@@ -4,12 +4,21 @@ import { onTuning, tuning, type Tuning } from "./reel-tuning";
 /**
  * The reel's scroll driver.
  *
- * The document still scrolls natively — that is what keeps the scrollbar, the
- * keyboard, the URL hash and the trackpad's own momentum honest. What changed is
- * that nothing paints straight off `scrollY` any more: the position is handed to
- * two springs (see follower.ts), and the type and the photographs are drawn from
- * those. The type leads, the photograph trails, and both keep moving for a beat
- * after the scroll has stopped.
+ * The document still scrolls natively, and that is the whole trick: the long,
+ * naturally decaying run you get from a trackpad flick is the operating
+ * system's momentum curve, and the only way to keep it is to not take the
+ * wheel away. So this file does two things and no more.
+ *
+ * It sets the gearing — `travel`, the px of scroll that buy one issue. That is
+ * what decides the feel, and a full swipe of a trackpad is about 780px of it:
+ * at a viewport per issue that swipe bought three titles and a flick died
+ * after two. At 120px it buys six or seven, the reel travels exactly as far
+ * as your fingers do, and a flick still has room to decay on its own.
+ *
+ * And it smooths the result: nothing paints straight off `scrollY`, the
+ * position goes through two springs (see follower.ts), the type leading and
+ * the photograph trailing. The springs are polish on top of the gearing, not a
+ * substitute for it — no amount of them fixes a reel geared too long.
  */
 export function mountReel(reel: HTMLElement) {
   const bgs = [...reel.querySelectorAll<HTMLElement>("[data-bg]")];
@@ -24,8 +33,11 @@ export function mountReel(reel: HTMLElement) {
 
   let t: Tuning = tuning();
 
+  /** px of document scroll per issue — the gearing. */
+  const step = () => Math.max(1, t.travel);
+
   /** Scroll position in issues: 0 = 029 snapped, 1 = 028, 2 = 027. */
-  const targetP = () => clampIndex(scrollY / innerHeight);
+  const targetP = () => clampIndex(scrollY / step());
 
   const type = new Follower(targetP(), t.typeFreq, t.typeZeta, t.typeResp);
   const cover = new Follower(targetP(), t.coverFreq, t.coverZeta, t.coverResp);
@@ -48,9 +60,10 @@ export function mountReel(reel: HTMLElement) {
     rows.forEach((row, i) => {
       const distance = Math.abs(pType - i);
       const live = clamp01(1 - distance);
-      // Rows more than one step away dim to the 40% white of canvas 3, then keep
-      // fading out. The canvases only ever stacked three issues; across thirty,
-      // a floor of 45% turns the screen into a wall of type.
+      // Rows more than one step away drop by dimStep, then keep fading out
+      // over dimReach. The canvases stacked three issues on a 45% floor;
+      // across thirty that floor is a wall of type, so the default falls much
+      // further than they did — a neighbour reads as a ghost, not a headline.
       const falloff =
         (1 - t.dimStep * clamp01(distance - 1)) * (1 - clamp01((distance - 2) / t.dimReach));
 
@@ -125,7 +138,7 @@ export function mountReel(reel: HTMLElement) {
 
   /* ------------------------------------------------------------ scroll input */
 
-  const yFor = (i: number) => clampIndex(i) * innerHeight;
+  const yFor = (i: number) => clampIndex(i) * step();
 
   /** Jump the document without animating it — the springs do the travelling. */
   let selfScroll = 0;
@@ -185,10 +198,9 @@ export function mountReel(reel: HTMLElement) {
 
   function onKey(e: KeyboardEvent) {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    // Only worth intercepting when the native magnet is off; otherwise the
-    // browser's own paging already lands on an issue.
-    if (effectiveSnap() !== "none") return;
-
+    // Always ours, at any gearing. Native paging moves by a viewport, which
+    // once an issue costs 120px means a PageDown skips seven of them — one
+    // key, one issue is the only reading that survives the slider.
     const here = Math.round(targetP());
     const map: Record<string, number> = {
       ArrowDown: here + 1,
@@ -206,13 +218,37 @@ export function mountReel(reel: HTMLElement) {
 
   /* --------------------------------------------------------------- wiring up */
 
-  const effectiveSnap = () => (t.wheelLock ? "none" : t.snap);
+  /**
+   * Under reduce there are no springs, so there is nothing to land the reel
+   * between issues — settle() is skipped too. The browser's own magnet has to
+   * take that job back, or a reduced-motion reader is left mid-issue.
+   */
+  const effectiveSnap = () =>
+    calm.matches ? "proximity" : t.wheelLock ? "none" : t.snap;
 
   function apply(next: Tuning) {
+    const wasAt = targetP();
+    const wasTravel = t.travel;
+
     t = next;
     type.tune(t.typeFreq, t.typeZeta, t.typeResp);
     cover.tune(t.coverFreq, t.coverZeta, t.coverResp);
+
+    // The spacers are sized off this, so the document's whole height changes
+    // with it — see IssueScroller's .snap / .reel padding.
+    reel.style.setProperty("--step", String(step()));
     document.documentElement.dataset.snap = effectiveSnap();
+
+    // Re-measure against the new ruler, or dragging the gearing slider would
+    // send the reel to a different issue on every input event.
+    if (t.travel !== wasTravel) {
+      // The spacers have to be their new height before scrollTo can be asked
+      // for a position near the end of them, or it clamps against the old one.
+      void reel.offsetHeight;
+      selfScroll = performance.now();
+      scrollTo({ top: yFor(wasAt), behavior: "instant" });
+    }
+
     kick();
   }
 
@@ -227,7 +263,8 @@ export function mountReel(reel: HTMLElement) {
     cover.reset(p);
     kick();
   });
-  calm.addEventListener("change", kick);
+  // Turning reduce on has to hand the magnet back, not just restart the loop.
+  calm.addEventListener("change", () => apply(t));
 
   // Deep link: /#028 opens with that issue already snapped.
   const target = rows.findIndex((row) => row.dataset.number === location.hash.slice(1));

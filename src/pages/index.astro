@@ -20,20 +20,24 @@ import Layout from "../layouts/Layout.astro";
 
     Which magnet is in force is the tuner's call (data-snap, written by
     src/scripts/reel.ts): `mandatory` always lands on an issue, `proximity`
-    leaves short scrolls alone, `none` hands the snapping to the spring.
-    The attribute is only absent for the instant before the script runs.
+    leaves short scrolls alone, `none` hands the landing to settle().
+
+    None is the default, and the bare rule below has to agree with it: a
+    magnet grabs a flick the moment it slows near an issue, which is exactly
+    when its momentum should still be running. What is left is the trackpad's
+    own deceleration, all the way out.
   */
   html {
     height: auto;
+    scroll-snap-type: none;
+  }
+
+  html[data-snap="proximity"] {
     scroll-snap-type: y proximity;
   }
 
   html[data-snap="mandatory"] {
     scroll-snap-type: y mandatory;
-  }
-
-  html[data-snap="none"] {
-    scroll-snap-type: none;
   }
 
   body {
