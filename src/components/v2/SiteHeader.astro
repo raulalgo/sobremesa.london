@@ -144,6 +144,22 @@ const SUBSTACK = "https://designsobremesa.substack.com";
     background: var(--color-orange);
   }
 
+  /*
+    The pill is small, but a backdrop-filter is not: it isolates its patch of
+    the page and re-blurs it every time what is behind it changes — and what is
+    behind it is a full-screen photograph that moves for the whole length of a
+    flick. On a phone that is a blur pass per frame for a 110×32 pill. The
+    background alpha does the same job of holding the orange off a bright cover,
+    so the blur comes off and the black goes up.
+  */
+  @media (pointer: coarse), (max-width: 48rem) {
+    .cta {
+      background: rgb(0 0 0 / 0.55);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
   /* Narrow viewports: the lockup would collide with the CTA long before the
      clamps bottom out, so the script line — the tall half — is dropped and the
      grot alone carries the mark. */

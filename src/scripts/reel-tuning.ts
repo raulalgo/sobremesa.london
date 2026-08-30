@@ -93,6 +93,44 @@ export const DEFAULTS: Tuning = {
 };
 
 /**
+ * The phone's gearing.
+ *
+ * Same media query as the narrow-viewport block in IssueScroller.astro, and
+ * that is not a coincidence: the gearing is only meaningful against the row it
+ * moves. There the row becomes 7svh (~57px on a 375×812 screen) instead of the
+ * 22px the width-bound scale was handing it, so the travel comes down with it.
+ *
+ * 80px an issue is a shade heavier than the desktop's 1:1 — the reel moves
+ * about seven tenths of the distance the thumb does. Dead-on 1:1 is the
+ * honest touch answer, but a thumb flick on glass carries far more momentum
+ * than a trackpad's, and at 1:1 a single one crosses the whole archive.
+ */
+export const MOBILE: Partial<Tuning> = {
+  travel: 80,
+  // Touch has its own inertia to trail; the springs only have to take the
+  // steps out of it, so they run a little faster and land a little harder.
+  typeFreq: 6,
+  typeZeta: 0.8,
+  typeResp: 0.25,
+  coverFreq: 4,
+  coverResp: 0.15,
+  // iOS momentum arrives in bursts with gaps between them. At 110ms settle()
+  // fired into one of those gaps and scrollTo() killed the flick outright —
+  // a hard stop mid-travel, which is exactly what reads as a dropped frame.
+  settleMs: 220,
+};
+
+/** The viewport the MOBILE block is written for. Kept in step with the
+ *  `max-width: 48rem` block in IssueScroller.astro. */
+export const NARROW = "(max-width: 48rem)";
+
+/** DEFAULTS, with the phone's overrides folded in when we are on one. */
+export const base = (): Tuning =>
+  typeof matchMedia !== "undefined" && matchMedia(NARROW).matches
+    ? { ...DEFAULTS, ...MOBILE }
+    : { ...DEFAULTS };
+
+/**
  * A few starting points, so the panel is a comparison and not a blank slate.
  *
  * `travel` is the one that actually changes the feel — the springs only smooth
@@ -222,7 +260,7 @@ const KEY = "sobremesa.reel.tuning";
  * would leave the panel reading one value while the reel ran another.
  */
 function sanitise(raw: unknown): Tuning {
-  const out = { ...DEFAULTS };
+  const out = base();
   if (!raw || typeof raw !== "object") return out;
 
   for (const k of Object.keys(DEFAULTS) as (keyof Tuning)[]) {
@@ -245,9 +283,9 @@ function sanitise(raw: unknown): Tuning {
 function read(): Tuning {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? sanitise(JSON.parse(raw)) : { ...DEFAULTS };
+    return raw ? sanitise(JSON.parse(raw)) : base();
   } catch {
-    return { ...DEFAULTS };
+    return base();
   }
 }
 
@@ -273,7 +311,7 @@ export function resetTuning() {
   } catch {
     /* see above */
   }
-  current = { ...DEFAULTS };
+  current = base();
   listeners.forEach((fn) => fn(current));
 }
 
