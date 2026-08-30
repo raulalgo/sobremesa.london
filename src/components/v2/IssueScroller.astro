@@ -163,6 +163,21 @@ const issues = await Promise.all(
     --gap: calc(0.463 * var(--u)); /*  5px   */
     --num-w: calc(10.37 * var(--u)); /* 112px  */
 
+    /*
+      The type is a separate scale from the row it sits in. On the 16:9 canvas
+      the two are welded together — the title's leading *is* the row height, so
+      the type fills it edge to edge. A portrait phone has to break that weld
+      (see the narrow-viewport block at the bottom of this file): the row wants
+      to be a readable fraction of a tall screen, the title wants to be a
+      readable fraction of a narrow one, and those are no longer the same
+      number.
+    */
+    --num-size: calc(4.0509 * var(--u)); /* 43.75px */
+    --num-lh: calc(3.5648 * var(--u)); /* 38.5px  */
+    --ttl-size: calc(12.963 * var(--u)); /* 140px   */
+    --ttl-lh: var(--row-h); /* 114.8px */
+    --ink-align: flex-start;
+
     /* Snapped row sits flush with the bottom edge (Figma: top 963 of 1080). */
     --anchor: calc(100svh - var(--row-h) - 0.204 * var(--u));
 
@@ -174,8 +189,15 @@ const issues = await Promise.all(
       needs a viewport of room underneath. At the old gearing the spacer was
       that viewport, so this was zero; at 120px it is the missing 780, and
       without it the archive simply ends six issues early.
+
+      Measured against the LARGE viewport, because the runway has to be long
+      enough at the viewport's biggest. A mobile toolbar retracts on the first
+      scroll and takes ~80px of document height with it; against 100svh the
+      runway came up exactly that much short and 000 — the last issue in the
+      archive — could not be reached on a phone at all.
     */
-    padding-bottom: max(0px, calc(100svh - var(--step) * 1px));
+    padding-bottom: max(0px, calc(100vh - var(--step) * 1px));
+    padding-bottom: max(0px, calc(100lvh - var(--step) * 1px));
   }
 
   /*
@@ -190,7 +212,23 @@ const issues = await Promise.all(
     top: 0;
     left: 0;
     width: 100%;
-    height: 100svh;
+
+    /*
+      The photograph is sized to the LARGE viewport and the rows are anchored
+      against the small one — they are two different jobs and they want two
+      different heights.
+
+      A mobile browser's toolbar retracts on the first scroll and the visible
+      viewport grows by ~80px. At 100svh (the height *with* the toolbar) the
+      fixed stage keeps its short size and that 80px opens as a black band
+      under the cover. 100lvh always fills; the surplus simply sits behind the
+      toolbar while it is there. 100dvh would also fill, but it re-measures
+      continuously and would re-raster a full-screen photograph all through
+      the retraction.
+    */
+    height: 100vh; /* pre-svh Safari, where 100vh already is the large one */
+    height: 100lvh;
+
     overflow: hidden;
     background: #000;
   }
@@ -239,7 +277,7 @@ const issues = await Promise.all(
     position: absolute;
     inset: 0;
     display: flex;
-    align-items: flex-start;
+    align-items: var(--ink-align);
     gap: var(--gap);
     padding-left: var(--pad-l);
     font-family: var(--font-display);
@@ -251,8 +289,8 @@ const issues = await Promise.all(
   .num {
     flex: none;
     width: var(--num-w);
-    font-size: calc(4.0509 * var(--u)); /* 43.75px */
-    line-height: calc(3.5648 * var(--u)); /* 38.5px  */
+    font-size: var(--num-size);
+    line-height: var(--num-lh);
     letter-spacing: -0.045em; /* -1.969px */
   }
 
@@ -277,8 +315,8 @@ const issues = await Promise.all(
   }
 
   .ttl {
-    font-size: calc(12.963 * var(--u)); /* 140px  */
-    line-height: var(--row-h); /* 114.8px */
+    font-size: var(--ttl-size);
+    line-height: var(--ttl-lh);
     letter-spacing: -0.045em; /* -6.3px  */
   }
 
@@ -286,6 +324,17 @@ const issues = await Promise.all(
     color: #fff;
     mix-blend-mode: soft-light;
     opacity: var(--idle, 1);
+  }
+
+  /*
+    A blended layer costs a read of the photograph behind it whatever its
+    opacity, and at any moment most of the archive is sitting at 3% white —
+    where soft-light and plain white land within about five levels of each
+    other, on the darkest cover in the set. reel.ts flags those rows and they
+    come off the blend: five blended layers a frame instead of thirty.
+  */
+  .row[data-ghost] .idle {
+    mix-blend-mode: normal;
   }
 
   .live {
@@ -298,6 +347,41 @@ const issues = await Promise.all(
   .snap {
     height: calc(var(--step) * 1px);
     scroll-snap-align: start;
+  }
+
+  /*
+    The phone.
+
+    `--u` is bounded by width, so on a 375pt screen it collapses to 2.1px and
+    the whole 16:9 composition arrives at a quarter scale: a 22px row on an
+    812pt screen. That is what put the weight off. One issue of travel moved
+    the reel 2.8% of the screen while it cost 120px of thumb — a 5:1 winch,
+    where the desktop gearing is 1:1 — and it is why the scroll read as heavy
+    and unresponsive rather than as a reel with momentum.
+
+    So the row goes back to being a real fraction of the screen (7svh, ~57px)
+    and the title is sized off the width instead of off the row. The two are
+    no longer the same measurement, so the ink hangs from the bottom of the row
+    rather than filling it. The matching gearing lives in reel-tuning.ts —
+    MOBILE.travel is set against this row height and the two have to move
+    together.
+  */
+  @media (max-width: 48rem) {
+    .reel {
+      --row-h: clamp(2.8rem, 7svh, 4rem);
+      --pad-l: max(1rem, 4.3vw);
+      --gap: 0.35rem;
+      --num-w: 2.15rem;
+
+      --num-size: 0.7rem;
+      --num-lh: 0.85rem;
+      --ttl-size: clamp(1.5rem, 8.4vw, 2.6rem);
+      --ttl-lh: 1;
+      --ink-align: flex-end;
+
+      /* Clear of the browser's own bottom toolbar, which overlays the page. */
+      --anchor: calc(100svh - var(--row-h) - 0.75rem);
+    }
   }
 </style>
 

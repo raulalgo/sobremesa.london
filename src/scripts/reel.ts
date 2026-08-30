@@ -22,6 +22,10 @@ import { onTuning, tuning, type Tuning } from "./reel-tuning";
  */
 export function mountReel(reel: HTMLElement) {
   const bgs = [...reel.querySelectorAll<HTMLElement>("[data-bg]")];
+  // The photographs and the black stand-ins, looked up once: the frame loop
+  // asks after every one of them on every frame.
+  const covers = bgs.map((bg) => bg.querySelector("img"));
+  const blank = bgs.map((bg) => bg.dataset.nocover !== undefined);
   const rows = [...reel.querySelectorAll<HTMLElement>("[data-row]")];
   const last = rows.length - 1;
   if (last < 0) return;
@@ -54,8 +58,34 @@ export function mountReel(reel: HTMLElement) {
     return s * s * (3 - 2 * s);
   }
 
+  /*
+    Everything the frame loop writes, remembered.
+
+    Thirty issues is thirty rows and thirty covers, and on any given frame the
+    overwhelming majority of them are pinned at zero and staying there. Writing
+    a value a layer already holds still invalidates it, and these are blended
+    layers over a full-screen photograph — the invalidation is the expensive
+    part, not the arithmetic. So nothing is written twice.
+  */
+  const liveWas = rows.map(() => "");
+  const idleWas = rows.map(() => "");
+  const ghostWas = rows.map(() => false);
+  const bgWas = bgs.map(() => "");
+  const bgHidWas = bgs.map(() => false);
+  let pWas = "";
+
+  /** Does this cover actually paint something opaque, or is it still a hole? */
+  const opaque = (i: number) => {
+    const img = covers[i];
+    return blank[i] || (!!img && img.complete && img.naturalWidth > 0);
+  };
+
   function paint(pType: number, pCover: number) {
-    reel.style.setProperty("--p", pType.toFixed(4));
+    const p = pType.toFixed(4);
+    if (p !== pWas) {
+      reel.style.setProperty("--p", p);
+      pWas = p;
+    }
 
     rows.forEach((row, i) => {
       const distance = Math.abs(pType - i);
@@ -66,16 +96,57 @@ export function mountReel(reel: HTMLElement) {
       // further than they did — a neighbour reads as a ghost, not a headline.
       const falloff =
         (1 - t.dimStep * clamp01(distance - 1)) * (1 - clamp01((distance - 2) / t.dimReach));
+      const idle = (1 - live) * falloff;
 
-      row.style.setProperty("--live", live.toFixed(4));
-      row.style.setProperty("--idle", ((1 - live) * falloff).toFixed(4));
+      const liveStr = live.toFixed(4);
+      if (liveStr !== liveWas[i]) {
+        row.style.setProperty("--live", liveStr);
+        liveWas[i] = liveStr;
+      }
+
+      const idleStr = idle.toFixed(4);
+      if (idleStr !== idleWas[i]) {
+        row.style.setProperty("--idle", idleStr);
+        idleWas[i] = idleStr;
+      }
+
+      // Under 3% white the two blends are within five levels of each other on
+      // the darkest cover in the archive, and closer than that on every other
+      // — but soft-light still costs a read of the photograph behind it. Take
+      // it off the rows that have faded past the point of telling. See the
+      // [data-ghost] rule in IssueScroller.astro.
+      const ghost = idle < 0.03;
+      if (ghost !== ghostWas[i]) {
+        row.toggleAttribute("data-ghost", ghost);
+        ghostWas[i] = ghost;
+      }
     });
 
     // Each cover fades in *over* the previous one, which stays opaque underneath
-    // — a straight two-way crossfade washes out at the midpoint.
-    bgs.forEach((bg, i) => {
-      bg.style.opacity = i === 0 ? "1" : fade(clamp01(pCover - i + 1)).toFixed(4);
-    });
+    // — a straight two-way crossfade washes out at the midpoint. Which also
+    // means every cover under the topmost opaque one is drawing a full screen
+    // of photograph that nobody will ever see; walking the stack from the top
+    // finds the first one that closes it and takes the rest out of the frame.
+    let covered = false;
+    for (let i = last; i >= 0; i--) {
+      const bg = bgs[i];
+
+      if (covered !== bgHidWas[i]) {
+        bg.style.visibility = covered ? "hidden" : "";
+        bgHidWas[i] = covered;
+      }
+
+      const o = i === 0 ? 1 : fade(clamp01(pCover - i + 1));
+      if (!covered) {
+        const oStr = o.toFixed(4);
+        if (oStr !== bgWas[i]) {
+          bg.style.opacity = oStr;
+          bgWas[i] = oStr;
+        }
+      }
+
+      if (o >= 1 && opaque(i)) covered = true;
+    }
   }
 
   /**
@@ -86,7 +157,7 @@ export function mountReel(reel: HTMLElement) {
   function mountNear(p: number) {
     const centre = Math.round(p);
     for (let i = Math.max(0, centre - 2); i <= Math.min(last, centre + 2); i++) {
-      const img = bgs[i].querySelector("img");
+      const img = covers[i];
       if (!img || img.src) continue;
       if (img.dataset.srcset) img.srcset = img.dataset.srcset;
       img.src = img.dataset.src!;
@@ -150,18 +221,26 @@ export function mountReel(reel: HTMLElement) {
 
   let settleTimer = 0;
 
+  /*
+    A finger resting on the glass produces no scroll events, and settle() has
+    no way to tell that from a flick that has finished — so it would land the
+    reel on an issue mid-drag and the next millimetre of the drag would fight
+    it. Nothing lands while the hand is still on the reel.
+  */
+  let touching = false;
+
   function onScroll() {
     kick();
     if (settleTimer) clearTimeout(settleTimer);
     // With no native magnet the reel has to find the nearest issue itself —
     // this is what catches a touch drag or a flick that ended between two.
-    if (effectiveSnap() === "none" && !calm.matches) {
+    if (effectiveSnap() === "none" && !calm.matches && !touching) {
       settleTimer = window.setTimeout(settle, t.settleMs);
     }
   }
 
   function settle() {
-    if (performance.now() - selfScroll < 120) return;
+    if (touching || performance.now() - selfScroll < 120) return;
     const i = Math.round(targetP());
     if (Math.abs(scrollY - yFor(i)) > 1) goto(i);
   }
@@ -255,6 +334,22 @@ export function mountReel(reel: HTMLElement) {
   onTuning(apply);
 
   addEventListener("scroll", onScroll, { passive: true });
+  addEventListener(
+    "touchstart",
+    () => {
+      touching = true;
+      if (settleTimer) clearTimeout(settleTimer);
+    },
+    { passive: true },
+  );
+  // The lift is the earliest moment a landing can be honest about — and it is
+  // also the start of the momentum, so onScroll takes it from here.
+  const release = () => {
+    touching = false;
+    onScroll();
+  };
+  addEventListener("touchend", release, { passive: true });
+  addEventListener("touchcancel", release, { passive: true });
   addEventListener("wheel", onWheel, { passive: false });
   addEventListener("keydown", onKey);
   addEventListener("resize", () => {
