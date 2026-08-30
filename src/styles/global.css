@@ -21,6 +21,9 @@
 /* Design tokens from the Figma (node 1:2) */
 @theme {
   --color-pink: #ff006f;
+  /* The other half of the archive's accent pair — ten covers are set in it,
+     including 000 and 029. Read off the same board as src/data/bindings.ts. */
+  --color-orange: #ff8000;
   --font-display: "Geist", system-ui, sans-serif;
   --font-script: "Kapakana", cursive;
 
