@@ -50,6 +50,27 @@
 html {
   height: 100%;
   background: #000;
+
+  /*
+    The cover is painted HERE, not only in the fixed stage.
+
+    Measured on an iPhone (iOS 18.7 / Safari 26.6): screen.height 874, and
+    every viewport unit — vh, lvh, svh, dvh — topping out at 754, with
+    env(safe-area-inset-*) reporting 0. A position:fixed element lives in the
+    layout viewport and is clipped to it, so no height and no negative top
+    will push it into those 120px. That is the black band, and it is why three
+    rounds of enlarging the overhang changed nothing.
+
+    The root element's background is different: it propagates to the canvas,
+    which paints the whole screen. So the canvas takes the cover, and the
+    strips get the photograph instead of a flat colour. src/scripts/reel.ts
+    keeps this in step with the reel; the fixed stage stays on top and still
+    owns the crossfade between issues.
+  */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 body {

@@ -429,13 +429,15 @@ const issues = await Promise.all(
         went back to what its own job needs. Every px of it is a px more
         photograph to raster and a tighter crop on an already extreme one.
       */
-      --bleed: max(18svh, 8rem);
       /*
-        Enough to clear Safari's toolbar strip, which is the one the probe
-        caught the stage missing. Only the bottom grows: --anchor is measured
-        from the top of the stage, so this costs the titles nothing.
+        No overhang. It was insurance against the cover stopping short of the
+        screen, and the probe proved it cannot buy that: a fixed element is
+        clipped to the layout viewport, so pulling it up or making it taller
+        moves nothing into the 120px the viewport units do not admit to. The
+        canvas covers those strips instead — see the html rule in global.css.
       */
-      --bleed-b: max(18svh, 8rem);
+      --bleed: 0px;
+      --bleed-b: 0px;
 
       /*
         Clear of the browser's own bottom toolbar, which overlays the page, and

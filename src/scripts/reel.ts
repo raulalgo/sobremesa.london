@@ -51,9 +51,18 @@ export function mountReel(reel: HTMLElement) {
   function tint(i: number) {
     if (i === tintWas) return;
     tintWas = i;
-    // The canvas: what actually paints the strips the cover cannot reach.
+
+    // The canvas is the only surface that reaches the edges of the screen —
+    // see the html rule in global.css. It gets the photograph itself, so the
+    // strips the fixed stage cannot enter continue the image rather than
+    // interrupting it.
+    const img = covers[i];
+    const src = img && (img.currentSrc || img.dataset.src);
+    root.style.backgroundImage = src ? `url("${src}")` : "none";
+
+    // The colour sits under it: it is what shows before the cover has decoded,
+    // and it is what 000 — the one issue with no photograph — keeps.
     root.style.backgroundColor = tints[i];
-    // And the browser's own furniture, which takes its colour from here.
     if (themeMeta) themeMeta.content = tints[i];
   }
 
