@@ -46,10 +46,15 @@ export function mountReel(reel: HTMLElement) {
   const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
   let tintWas = -1;
 
+  const root = document.documentElement;
+
   function tint(i: number) {
-    if (!themeMeta || i === tintWas) return;
+    if (i === tintWas) return;
     tintWas = i;
-    themeMeta.content = tints[i];
+    // The canvas: what actually paints the strips the cover cannot reach.
+    root.style.backgroundColor = tints[i];
+    // And the browser's own furniture, which takes its colour from here.
+    if (themeMeta) themeMeta.content = tints[i];
   }
 
   const clamp01 = (n: number) => Math.min(1, Math.max(0, n));

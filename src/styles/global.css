@@ -32,10 +32,29 @@
   --font-blackletter: "UnifrakturCook", "Palatino", Georgia, serif;
 }
 
-html,
-body {
+/*
+  Only the root carries a background.
+
+  The root element's background is propagated to the canvas, and the canvas is
+  the one painting surface that covers the whole screen — including the strips
+  behind the status bar and behind Safari's floating toolbar, which a fixed
+  element sized in viewport units does not reach. That is where the black bands
+  on a phone were coming from: not from Safari's chrome, but from this rule,
+  painting #000 in the part of the screen the cover could not fill.
+
+  body must therefore stay transparent, or its own box would paint over the
+  canvas everywhere it reaches. src/scripts/reel.ts keeps the root colour on
+  the top edge of the current cover, so the strip continues the photograph
+  instead of interrupting it.
+*/
+html {
   height: 100%;
   background: #000;
+}
+
+body {
+  height: 100%;
+  background: transparent;
 }
 
 /* Scene Rig signals, written by src/scripts/scene-rig.ts. These defaults

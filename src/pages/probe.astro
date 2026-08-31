@@ -1,0 +1,97 @@
+---
+/**
+ * Temporary diagnostic — delete once the mobile bleed question is settled.
+ *
+ * Magenta canvas, cyan fixed stage. Whatever colour a strip comes out is the
+ * answer: magenta means the canvas reaches it and the fixed stage does not
+ * (which is the whole bug); cyan means the stage reaches it too; black means
+ * neither does and something else is going on.
+ */
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f0f" />
+    <title>bleed probe</title>
+    <style>
+      /* The canvas. Should reach every edge of the screen. */
+      html { height: 100%; background: #f0f; }
+      body { margin: 0; height: auto; background: transparent; }
+
+      /* Same geometry as the reel's .stage. */
+      .stage {
+        position: fixed;
+        left: 0;
+        width: 100%;
+        top: calc(-1 * var(--bleed));
+        --bleed: max(5svh, 2.5rem);
+        height: calc(100vh + 2 * var(--bleed));
+        height: calc(100lvh + 2 * var(--bleed));
+        background: #0ff;
+      }
+
+      pre {
+        position: relative;
+        margin: 0;
+        padding: 5.5rem 1rem;
+        font: 700 13px/1.5 ui-monospace, Menlo, monospace;
+        color: #000;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .runway { height: 300vh; }
+    </style>
+  </head>
+  <body>
+    <div class="stage"></div>
+    <pre id="out">measuring…</pre>
+    <div class="runway"></div>
+
+    <script is:inline>
+      const px = (v) => Math.round(v * 100) / 100;
+      function unit(u) {
+        const d = document.createElement("div");
+        d.style.cssText = `position:fixed;top:0;left:-9999px;height:100${u};`;
+        document.body.appendChild(d);
+        const h = d.getBoundingClientRect().height; d.remove(); return px(h);
+      }
+      function env(side) {
+        const d = document.createElement("div");
+        d.style.cssText = `position:fixed;top:0;left:-9999px;height:env(safe-area-inset-${side},0px);`;
+        document.body.appendChild(d);
+        const h = d.getBoundingClientRect().height; d.remove(); return px(h);
+      }
+      function render() {
+        const s = document.querySelector(".stage").getBoundingClientRect();
+        document.getElementById("out").textContent = [
+          `innerHeight     ${innerHeight}`,
+          `screen.height   ${screen.height}`,
+          `visualViewport  ${px(visualViewport.height)}`,
+          `dpr             ${devicePixelRatio}`,
+          ``,
+          `100vh  ${unit("vh")}   100lvh ${unit("lvh")}`,
+          `100svh ${unit("svh")}   100dvh ${unit("dvh")}`,
+          ``,
+          `safe top ${env("top")}  bottom ${env("bottom")}`,
+          ``,
+          `stage top      ${px(s.top)}`,
+          `stage bottom   ${px(s.bottom)}`,
+          `covers top?    ${s.top <= 0 ? "yes" : "NO — magenta above"}`,
+          `covers bottom? ${s.bottom >= innerHeight ? "yes" : "NO — magenta below"}`,
+          ``,
+          `UA ${navigator.userAgent}`,
+        ].join("\n");
+      }
+      render();
+      addEventListener("scroll", render, { passive: true });
+      addEventListener("resize", render);
+      visualViewport.addEventListener("resize", render);
+    </script>
+  </body>
+</html>
