@@ -412,16 +412,17 @@ const issues = await Promise.all(
 
       /*
         The phone is where the viewport is a negotiation rather than a number —
-        a toolbar that retracts, a notch, a home indicator, a rounded corner —
-        so the cover overhangs the lot. Bigger than any inset iOS asks for
-        (59px at the top of the tallest phone, 34 at the bottom), which is the
-        point: nothing has to be measured for the photograph to reach the edge.
+        a toolbar mid-retraction, a rounded corner, an lvh that lands a few px
+        short — so the cover overhangs rather than trusting the measurement.
 
-        It costs ~16% more photograph to raster and crops the 16:9 covers a
-        little tighter, which on a portrait phone is already an extreme crop.
-        That is the trade — a slightly closer photograph over a black band.
+        Sized to clear the insets iOS actually asks for (59px at the top of the
+        tallest phone, 34 at the bottom) and no further. It started at 8svh,
+        when the black bands were still thought to be a safe-area problem; they
+        were not — see the theme-color meta in Layout.astro — so the overhang
+        went back to what its own job needs. Every px of it is a px more
+        photograph to raster and a tighter crop on an already extreme one.
       */
-      --bleed: max(8svh, 3.5rem);
+      --bleed: max(5svh, 2.5rem);
 
       /*
         Clear of the browser's own bottom toolbar, which overlays the page, and
