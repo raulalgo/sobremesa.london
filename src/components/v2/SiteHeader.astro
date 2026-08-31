@@ -51,8 +51,19 @@ const SUBSTACK = "https://designsobremesa.substack.com";
        the viewport whatever the CTA measures. */
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    padding: clamp(1.75rem, 4.4svh, 3.1rem) clamp(1rem, 3.5vw, 2.75rem)
-      clamp(0.85rem, 2.2svh, 1.6rem);
+    /*
+      The page owns the safe area now (viewport-fit=cover, Layout.astro), which
+      is what lets the cover reach the top edge — but the lockup would go up
+      there with it and sit under the status bar. The insets come back as
+      padding, so the photograph bleeds and the type does not. Both sides get
+      the same one so the lockup stays centred on the viewport; in landscape,
+      where only one side is notched, the grid still centres inside the padding
+      box. Zero everywhere that has no safe area, i.e. every desktop window.
+    */
+    padding: calc(clamp(1.75rem, 4.4svh, 3.1rem) + env(safe-area-inset-top, 0px))
+      calc(clamp(1rem, 3.5vw, 2.75rem) + env(safe-area-inset-right, 0px))
+      clamp(0.85rem, 2.2svh, 1.6rem)
+      calc(clamp(1rem, 3.5vw, 2.75rem) + env(safe-area-inset-left, 0px));
 
     /* The strip itself is inert; the links below opt back in. */
     pointer-events: none;
