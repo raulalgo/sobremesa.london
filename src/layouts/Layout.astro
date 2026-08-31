@@ -4,11 +4,17 @@ import "../styles/global.css";
 interface Props {
   title?: string;
   description?: string;
+  /**
+   * What iOS Safari tints its status bar and toolbar with. See the meta below
+   * — this is the one colour on the page that is not painted by the page.
+   */
+  themeColor?: string;
 }
 
 const {
   title = "Sobremesa London",
   description = "Sobremesa London — desde 2026. Más soon.",
+  themeColor = "#000000",
 } = Astro.props;
 ---
 
@@ -29,6 +35,22 @@ const {
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <meta name="description" content={description} />
+
+    <!--
+      The two strips a full-bleed page cannot reach.
+
+      iOS Safari will not let a page paint behind the status bar, or behind its
+      own toolbar. It *tints* those strips instead — from this meta, or, if it
+      is absent, from the page background. The background here is #000
+      (global.css), which is why the reel arrived on a phone with a black band
+      above and below the photograph however far the cover was made to overhang.
+
+      So the strip is told what colour the top of the current cover is, and it
+      stops reading as a band. src/scripts/reel.ts rewrites this as the reel
+      moves; the value rendered here is the cover the page opens on, so the
+      first paint is already right. Colours come from scripts/cover-colors.mjs.
+    -->
+    <meta name="theme-color" content={themeColor} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
 

@@ -1,13 +1,26 @@
 ---
+import { getCollection } from "astro:content";
 import IssueScroller from "../components/v2/IssueScroller.astro";
 import SiteHeader from "../components/v2/SiteHeader.astro";
 import ScrollTuner from "../components/v2/ScrollTuner.astro";
 import Layout from "../layouts/Layout.astro";
+import COVER_COLORS from "../data/cover-colors.json";
+
+/*
+  The reel opens on the newest issue, so that is the cover whose top edge
+  Safari's status bar has to match on the first paint. reel.ts takes over the
+  moment the reader scrolls — see the theme-color meta in Layout.astro.
+*/
+const newest = (await getCollection("issues"))
+  .map(({ data }) => data.number)
+  .sort((a, b) => b.localeCompare(a))[0];
+const themeColor = (COVER_COLORS as Record<string, string>)[newest] ?? "#000000";
 ---
 
 <Layout
   title="Sobremesa London — Issues"
   description="Design Sobremesa — el archivo de issues, número a número."
+  themeColor={themeColor}
 >
   <SiteHeader />
   <IssueScroller />

@@ -30,6 +30,28 @@ export function mountReel(reel: HTMLElement) {
   const last = rows.length - 1;
   if (last < 0) return;
 
+  /*
+    The strip behind the status bar.
+
+    It is the one part of a full-bleed phone layout the page does not draw:
+    iOS Safari paints it itself, tinting it from <meta name="theme-color"> and
+    falling back to the page background — black — when there is none. That is
+    what read as a band above the photograph no matter how far the cover was
+    made to overhang the viewport. The cover cannot reach up there, but the
+    strip can be handed the colour of the cover's top edge, and then the two
+    stop looking like two things. Colours ride in on data-tint; see
+    scripts/cover-colors.mjs.
+  */
+  const tints = bgs.map((bg) => bg.dataset.tint || "#000000");
+  const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  let tintWas = -1;
+
+  function tint(i: number) {
+    if (!themeMeta || i === tintWas) return;
+    tintWas = i;
+    themeMeta.content = tints[i];
+  }
+
   const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
   const clampIndex = (n: number) => Math.min(last, Math.max(0, n));
 
@@ -147,6 +169,11 @@ export function mountReel(reel: HTMLElement) {
 
       if (o >= 1 && opaque(i)) covered = true;
     }
+
+    // Whichever cover is doing most of the painting owns the strip. Safari
+    // animates the change itself, so a hard switch at the halfway point reads
+    // as a fade rather than a jump.
+    tint(clampIndex(Math.round(pCover)));
   }
 
   /**
