@@ -66,7 +66,14 @@ const {
       rel="stylesheet"
     />
   </head>
-  <body class="bg-black text-pink antialiased">
+  <!--
+    No bg-black here. The black belongs to the root element, not to body: the
+    root's background is what propagates to the canvas and paints the strips
+    behind the status bar and Safari's toolbar. A background on body paints
+    over the canvas wherever body's own box reaches, which put the black bands
+    back however the root was coloured. See global.css.
+  -->
+  <body class="text-pink antialiased">
     <slot />
   </body>
 </html>

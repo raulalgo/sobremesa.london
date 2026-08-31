@@ -195,6 +195,13 @@ const issues = await Promise.all(
       agree on; the phone block at the bottom of this file turns it on.
     */
     --bleed: 0px;
+    /*
+      The bottom wants its own number. /probe on a real iPhone came back cyan
+      at the top and magenta at the bottom: the fixed stage reaches the top
+      edge on a 41px overhang, and falls short at the bottom by more than that
+      — Safari's floating toolbar sits in a strip that 100lvh does not count.
+    */
+    --bleed-b: 0px;
 
     --p: 0; /* scroll position, in issues */
     --step: 120; /* px of scroll per issue — the inline style is the real one */
@@ -257,8 +264,8 @@ const issues = await Promise.all(
       black. The rows pay the shift back through --anchor.
     */
     top: calc(-1 * var(--bleed));
-    height: calc(100vh + 2 * var(--bleed));
-    height: calc(100lvh + 2 * var(--bleed));
+    height: calc(100vh + var(--bleed) + var(--bleed-b));
+    height: calc(100lvh + var(--bleed) + var(--bleed-b));
 
     overflow: hidden;
     background: #000;
@@ -423,6 +430,12 @@ const issues = await Promise.all(
         photograph to raster and a tighter crop on an already extreme one.
       */
       --bleed: max(5svh, 2.5rem);
+      /*
+        Enough to clear Safari's toolbar strip, which is the one the probe
+        caught the stage missing. Only the bottom grows: --anchor is measured
+        from the top of the stage, so this costs the titles nothing.
+      */
+      --bleed-b: max(14svh, 7rem);
 
       /*
         Clear of the browser's own bottom toolbar, which overlays the page, and
