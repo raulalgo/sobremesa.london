@@ -181,6 +181,13 @@ const issues = await Promise.all(
     /* Snapped row sits flush with the bottom edge (Figma: top 963 of 1080). */
     --anchor: calc(100svh - var(--row-h) - 0.204 * var(--u));
 
+    /*
+      How far the photograph is pushed past the viewport on every edge. Zero on
+      a desktop window, where the viewport is a number the browser and the page
+      agree on; the phone block at the bottom of this file turns it on.
+    */
+    --bleed: 0px;
+
     --p: 0; /* scroll position, in issues */
     --step: 120; /* px of scroll per issue — the inline style is the real one */
 
@@ -209,7 +216,6 @@ const issues = await Promise.all(
   */
   .stage {
     position: fixed;
-    top: 0;
     left: 0;
     width: 100%;
 
@@ -228,6 +234,23 @@ const issues = await Promise.all(
     */
     height: 100vh; /* pre-svh Safari, where 100vh already is the large one */
     height: 100lvh;
+
+    /*
+      And on top of that, the bleed. The stage is the clipper — `overflow:
+      hidden` here is what draws the edge of the photograph — so an overshoot
+      has to be applied to *this* box, not to .bg inside it, or it is simply
+      clipped back to the same rectangle.
+
+      Pulling the top up by --bleed and adding it back twice over to the height
+      leaves the cover overhanging every edge by that much. It is insurance,
+      not composition: whatever the browser and the page disagree about — a
+      safe-area inset, a toolbar mid-retraction, a rounded corner, an lvh that
+      lands a few px short — is absorbed by the overhang instead of opening as
+      black. The rows pay the shift back through --anchor.
+    */
+    top: calc(-1 * var(--bleed));
+    height: calc(100vh + 2 * var(--bleed));
+    height: calc(100lvh + 2 * var(--bleed));
 
     overflow: hidden;
     background: #000;
@@ -369,7 +392,7 @@ const issues = await Promise.all(
   @media (max-width: 48rem) {
     .reel {
       --row-h: clamp(2.8rem, 7svh, 4rem);
-      --pad-l: max(1rem, 4.3vw);
+      --pad-l: max(1rem, 4.3vw + env(safe-area-inset-left, 0px));
       --gap: 0.35rem;
       --num-w: 2.15rem;
 
@@ -379,8 +402,30 @@ const issues = await Promise.all(
       --ttl-lh: 1;
       --ink-align: flex-end;
 
-      /* Clear of the browser's own bottom toolbar, which overlays the page. */
-      --anchor: calc(100svh - var(--row-h) - 0.75rem);
+      /*
+        The phone is where the viewport is a negotiation rather than a number —
+        a toolbar that retracts, a notch, a home indicator, a rounded corner —
+        so the cover overhangs the lot. Bigger than any inset iOS asks for
+        (59px at the top of the tallest phone, 34 at the bottom), which is the
+        point: nothing has to be measured for the photograph to reach the edge.
+
+        It costs ~16% more photograph to raster and crops the 16:9 covers a
+        little tighter, which on a portrait phone is already an extreme crop.
+        That is the trade — a slightly closer photograph over a black band.
+      */
+      --bleed: max(8svh, 3.5rem);
+
+      /*
+        Clear of the browser's own bottom toolbar, which overlays the page, and
+        now of the home indicator too — viewport-fit=cover (see Layout.astro)
+        hands the page that strip and the titles must not sit in it. The
+        --bleed term puts back the shift the stage took: the anchor is measured
+        from the top of the *viewport*, the stage now starts above it.
+      */
+      --anchor: calc(
+        var(--bleed) + 100svh - var(--row-h) - 0.75rem -
+          env(safe-area-inset-bottom, 0px)
+      );
     }
   }
 </style>

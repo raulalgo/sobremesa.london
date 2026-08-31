@@ -16,7 +16,18 @@ const {
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      viewport-fit=cover: without it Safari lays the document out *inside* the
+      safe area on a notched phone, and a full-bleed photograph stops short of
+      the status bar and the home indicator — the black bands top and bottom.
+      With it the page owns the whole screen and the insets come back as
+      env(safe-area-inset-*), which the chrome and the reel's anchor pay back
+      to keep type clear of the notch. See SiteHeader.astro / IssueScroller.astro.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
